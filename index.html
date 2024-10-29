@@ -1,0 +1,124 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>UK Interactive Map</title>
+
+  <!-- Leaflet CSS -->
+  <link
+    rel="stylesheet"
+    href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
+  />
+
+  <!-- Leaflet Search CSS -->
+  <link
+    rel="stylesheet"
+    href="https://unpkg.com/leaflet-search@3.0.0/dist/leaflet-search.min.css"
+  />
+
+  <!-- Custom CSS -->
+  <link rel="stylesheet" href="css/styles.css" />
+
+  <!-- Add the following CSS to style the Download Map control -->
+  <style>
+    /* Ensure the map container has a transparent background */
+    #map {
+      height: 100vh;
+      width: 100%;
+      background: transparent;
+    }
+
+    /* Style for the Download Map Leaflet control */
+    .leaflet-control-download {
+      background-color: white;
+      background-clip: padding-box;
+      border: 2px solid rgba(0,0,0,0.2);
+      border-radius: 4px;
+      box-shadow: 0 1px 5px rgba(0,0,0,0.65);
+      cursor: pointer;
+      padding: 5px 10px;
+      font: 14px/16px Arial, Helvetica, sans-serif;
+      margin: 10px;
+    }
+
+    .leaflet-control-download:hover {
+      background-color: #f4f4f4;
+    }
+
+    /* Optional: Style for the info box */
+    .info-box {
+      position: absolute;
+      top: 10px;
+      right: 10px;
+      background: white;
+      padding: 10px;
+      border: 1px solid #ccc;
+      z-index: 1000;
+      max-width: 300px;
+      overflow: auto;
+    }
+
+    .info-box.hidden {
+      display: none;
+    }
+
+    .info-box-close {
+      position: absolute;
+      top: 5px;
+      right: 5px;
+      background: transparent;
+      border: none;
+      font-size: 16px;
+      cursor: pointer;
+    }
+  </style>
+
+</head>
+<body>
+  <!-- Map Container -->
+  <div id="map"></div>
+
+  <!-- Info Box -->
+  <div id="info-box" class="info-box hidden">
+    <!-- Content will be injected by JavaScript -->
+  </div>
+
+  <!-- Remove the existing Export Button to avoid conflicts -->
+  <!-- <button id="export-map">Download Map</button> -->
+
+  <!-- Leaflet JS -->
+  <script
+    src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"
+  ></script>
+
+  <!-- Leaflet Search JS -->
+  <script
+    src="https://unpkg.com/leaflet-search@3.0.0/dist/leaflet-search.min.js"
+  ></script>
+
+  <!-- PapaParse JS for CSV Parsing -->
+  <script
+    src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.3.2/papaparse.min.js"
+  ></script>
+
+  <!-- Chroma.js -->
+  <script 
+    src="https://cdnjs.cloudflare.com/ajax/libs/chroma-js/2.1.0/chroma.min.js"
+  ></script>
+
+  <!-- Add html2canvas before your custom script -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+
+
+  <!-- Leaflet Image Plugin (from unpkg) -->
+  <script 
+    src="https://unpkg.com/leaflet-image@0.4.0/leaflet-image.js"
+  ></script>
+
+  <!-- Turf.js -->
+  <script src="https://unpkg.com/@turf/turf/turf.min.js"></script>
+  
+  <!-- Custom JS -->
+  <script src="js/script.js"></script>
+</body>
+</html>
