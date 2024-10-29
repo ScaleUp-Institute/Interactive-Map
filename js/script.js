@@ -1083,10 +1083,24 @@ function loadSectorsData(sectorsList) {
 
     // Compute overall statistics for each sector
     computeSectorStatistics();
+
+    // **Start of Master Dataset Generation**
+    var masterDataset = [];
+
+    for (var sector in sectorStats) {
+      masterDataset.push({
+        sector: sector,
+        numberOfCompanies: sectorStats[sector].companyCount,
+        totalEmployees: Math.round(sectorStats[sector].totalEmployees),
+        totalTurnover: sectorStats[sector].totalTurnover, // Keep as number for CSV
+        averageGrowthRate: sectorStats[sector].averageGrowthRate * 100, // Convert to percentage
+        femaleFoundedPercentage: sectorStats[sector].femaleFoundedPercentage, // Keep as number
+        totalIUKFunding: sectorStats[sector].totalIUKFunding, // Keep as number
+        totalInvestment: sectorStats[sector].totalInvestment // Keep as number
+      });
+    }
   });
 }
-
-
 function computeSectorStatistics() {
   // Initialize the sectorStats object
   sectorStats = {};
@@ -1099,25 +1113,30 @@ function computeSectorStatistics() {
         totalEmployees: 0,
         totalTurnover: 0,
         totalGrowthRate: 0,
+        validGrowthRateCount: 0, // Ensure this line exists
         totalIUKFunding: 0,
-        femaleFoundedCount: 0
+        femaleFoundedCount: 0,
+        totalInvestment: 0
       };
     }
     sectorStats[sector].companyCount += 1;
 
     // Aggregate statistics
-    var growthRate = company.BestEstimateGrowthPercentagePerYear || 0;
-    sectorStats[sector].totalGrowthRate += growthRate;
+    var growthRate = parseFloat(company.BestEstimateGrowthPercentagePerYear);
+    if (!isNaN(growthRate)) {
+      sectorStats[sector].totalGrowthRate += growthRate;
+      sectorStats[sector].validGrowthRateCount += 1; // Increment if valid
+    }
 
-    var iukFunding = company.TotalInnovateUKFunding || 0;
-    sectorStats[sector].totalIUKFunding += iukFunding;
+    var iukFunding = parseFloat(company.TotalInnovateUKFunding);
+    sectorStats[sector].totalIUKFunding += isNaN(iukFunding) ? 0 : iukFunding;
 
     if (company.WomenFounded === 1) {
       sectorStats[sector].femaleFoundedCount += 1;
     }
   });
 
-  // Integrate 'Total Employees' and 'Total Turnover' from clusterSummaryData
+  // Integrate 'Total Employees', 'Total Turnover', and 'Total Investment' from clusterSummaryData
   for (var sector in sectorStats) {
     var totalEmployees = 0;
     var totalTurnover = 0;
@@ -1128,6 +1147,10 @@ function computeSectorStatistics() {
         totalEmployees += parseFloat(clusterSummaryData[clusterId].total_employees) || 0;
         totalTurnover += parseFloat(clusterSummaryData[clusterId].total_turnover) || 0;
         companyCount += parseInt(clusterSummaryData[clusterId].companycount) || 0;
+
+        // Aggregate 'total_Dealroom_PE' as 'Total Investment'
+        var dealroomPE = parseFloat(clusterSummaryData[clusterId].total_Dealroom_PE);
+        sectorStats[sector].totalInvestment += isNaN(dealroomPE) ? 0 : dealroomPE;
       }
     }
 
@@ -1135,16 +1158,15 @@ function computeSectorStatistics() {
     sectorStats[sector].totalTurnover = totalTurnover;
 
     // Calculate average growth rate and female-founded percentage
-    var companyCountForAvg = sectorStats[sector].companyCount;
+    var validGrowthRateCount = sectorStats[sector].validGrowthRateCount;
     sectorStats[sector].averageGrowthRate =
-      companyCountForAvg > 0 ? sectorStats[sector].totalGrowthRate / companyCountForAvg : 0;
+      validGrowthRateCount > 0 ? sectorStats[sector].totalGrowthRate / validGrowthRateCount : 0;
     sectorStats[sector].femaleFoundedPercentage =
-      companyCountForAvg > 0
-        ? (sectorStats[sector].femaleFoundedCount / companyCountForAvg) * 100
+      sectorStats[sector].companyCount > 0
+        ? (sectorStats[sector].femaleFoundedCount / sectorStats[sector].companyCount) * 100
         : 0;
   }
 }
-
 
 function showSectorStatistics(selectedSectors) {
   var content =
@@ -1158,9 +1180,10 @@ function showSectorStatistics(selectedSectors) {
         <p><strong>Number of Companies:</strong> ${stats.companyCount}</p>
         <p><strong>Total Employees:</strong> ${Math.round(stats.totalEmployees)}</p>
         <p><strong>Total Turnover:</strong> ${formatTurnover(stats.totalTurnover)}</p>
-        <p><strong>Average Growth Rate:</strong> ${stats.averageGrowthRate.toFixed(2)}%</p>
+        <p><strong>Average Growth Rate:</strong> ${(stats.averageGrowthRate * 100).toFixed(2)}%</p> <!-- Updated Line -->
         <p><strong>% Female-Founded Companies:</strong> ${stats.femaleFoundedPercentage.toFixed(2)}%</p>
         <p><strong>Total IUK Grant Funding:</strong> ${formatTurnover(stats.totalIUKFunding)}</p>
+        <p><strong>Total Investment:</strong> ${formatTurnover(stats.totalInvestment)}</p>
       `;
     } else {
       content += `<p>No statistics available for sector: ${sector}</p>`;
