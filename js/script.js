@@ -1023,6 +1023,7 @@ function loadSectorsData(sectorsList) {
     });
   });
 
+  // Process all promises and generate sector statistics
   Promise.all(promises).then(function (sectorDataArray) {
     companyData = [];
     clusterSummaryData = {}; // Holds cluster-level summary data
@@ -1083,24 +1084,9 @@ function loadSectorsData(sectorsList) {
 
     // Compute overall statistics for each sector
     computeSectorStatistics();
-
-    // **Start of Master Dataset Generation**
-    var masterDataset = [];
-
-    for (var sector in sectorStats) {
-      masterDataset.push({
-        sector: sector,
-        numberOfCompanies: sectorStats[sector].companyCount,
-        totalEmployees: Math.round(sectorStats[sector].totalEmployees),
-        totalTurnover: sectorStats[sector].totalTurnover, // Keep as number for CSV
-        averageGrowthRate: sectorStats[sector].averageGrowthRate * 100, // Convert to percentage
-        femaleFoundedPercentage: sectorStats[sector].femaleFoundedPercentage, // Keep as number
-        totalIUKFunding: sectorStats[sector].totalIUKFunding, // Keep as number
-        totalInvestment: sectorStats[sector].totalInvestment // Keep as number
-      });
-    }
   });
 }
+
 function computeSectorStatistics() {
   // Initialize the sectorStats object
   sectorStats = {};
