@@ -144,7 +144,7 @@ var sectorColors = {
   'Advanced Manufacturing': 'rgba(255, 0, 0, 0.5)',    // Red with transparency
   'Agritech': '#008080',                              // Teal
   'Creative Industries': '#FF69B4',                   // Bright pink
-  'Fintech': '#1646a0',                               // Yellow
+  'Fintech': '#1646a0',                               // Dark Blue
   'Life Sciences': '#800080',                         // Purple
   'Net Zero': '#1646a0',                              // Dark Blue
   'Clean Tech': '#FFB6C1',                            // Dusky pink
