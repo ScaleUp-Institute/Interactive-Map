@@ -1,0 +1,26 @@
+CLUSTER No,Advanced Manufacturing,Agritech,Creative Industries,Fintech,Net Zero,Professional Services,Technology,Telecoms Technology,Life Sciences
+1,,Edinburgh,,,Northern Ireland,Northern Ireland,Northern Ireland,"Southampton, Hampshire","Belfast, Northern Ireland"
+2,Glasgow,Greater Manchester,Glasgow,North East,Aberdeenshire,Glasgow,Glasgow,Greater London,Glasgow
+3,Edinburgh,"Bristol, West of England",Edinburgh,Cardiff,Edinburgh,Edinburgh,Edinburgh,Thames Valley Berkshire,Edinburgh
+4,North East,West Midlands,,Liverpool & Merseyside,Glasgow,"Exeter, South Devon",North East,Humber / South Yorkshire,North East
+5,West of England & South Wales,East Mdlands CCA,West of England & South Wales,Greater Manchester,North East,North East,Liverpool & Merseyside,West Midlands & Gloucestershire,
+6,Manchester,South East Midlands,North East,"Bristol, West of England",West of England & South Wales,Cardiff,Greater Manchester,North West England,Cardiff
+7,Warrington,Greater London,Liverpool & Merseyside,West Yorkshire,North West England,"Bristol, West of England",Cardiff,North East / A1 corridor,"Southampton, Hampshire"
+8,West Yorkshire,Thames Valley Berkshire,Greater Manchester,,M1 Corridror - West & South Yorkshire,"Southampton, Hampshire","Bristol, West of England",Central belt of Scotland,West of England & Gloucestershire
+9,South Yorkshire,,West Yorkshire,Greater Birmingham,Greater Birmingham,Oxfordshire,Gloucestershire,,Greater Birmingham
+10,Greater Birmingham,,South Yorkshire,Gloucestershire,Cambridge,Thames Valley Berkshire,Greater Birmingham,,Liverpool & Merseyside
+11,"M1 corridor, Leicestershire",,"Nottingham, East Midlands CCA","Canary Wharf, East London","Milton Keynes & Northampton, South East Midlands",Greater London,Coventry & Warwickshire,,Greater Manchester
+12,Coventry,,Greater Birmingham,"Hammersmith & Shepherd's Bush, West London",Oxfordshire,"Milton Keynes & Northampton, South East Midlands",West Yorkshire,,West Yorkshire
+13,Cambridge,,Coventry,"Paddington Basin, City of Westminster",Greater London & Thames Valley,Greater Birmingham,South Yorkshire,,South Yorkshire
+14,"Southampton, Hampshire",,Cambridge,"Victoria, City of Westminster",,"Derby, Nottingham & Leicester, East Midlands",East Midlands CCA,,"Nottingham, East Midlands CCA"
+15,"Milton Keynes, South East Midlands",,"Brighton, East Sussex","Charing Cross, City of Westminster",,South Yorkshire,Cambridge,,Cambridge
+16,Oxfordshire,,Reading,"Southwark, Central London",,West Yorkshire,"Brighton, East Sussex",,"Milton Keynes & Northampton, South East Midlands"
+17,Thames Valley Berkshire,,Slough & Windsor,"East, City of London",,Liverpool & Merseyside,"Milton Keynes, South East Midlands",,"Harwell, Oxfordshire"
+18,Greater London,,"Hammersmith & Shepherd's Bush, West London","Fleet Place, City of London",,Greater Manchester,Oxfordshire,,"Oxford, Oxfordshire"
+19,,,"City & Westminster, Central London","Fetter Lane / Hatton Garden, City of London",,,Reading,,"Rochester, North Kent"
+20,,,,"Holborn, Central London",,,"Isle of Dogs, East London",,"Hammersmith & Shepherd's Bush, West London"
+21,,,,"Soho, City of Westminster",,,"Victoria, City of Westminster",,Central London
+22,,,,,,,City of London,,
+Count,17,8,17,19,13,18,22,8,20
+Visual check,17,8,17,19,13,18,22,8,20
+diff,0,0,0,0,0,0,0,0,0
