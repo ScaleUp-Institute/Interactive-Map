@@ -2,91 +2,69 @@
 body {
   margin: 0;
   padding: 0;
+  font-family: 'Open Sans', sans-serif;
+  font-size: 14px;
+  color: #333;
+}
+
+/* Map and Container Styles */
+.map-container {
+  display: flex;
+  height: 100vh;
+  width: 100%;
+}
+
+.left-frame {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  width: 250px; /* Adjust width as needed */
+  background-color: #f9f9f9; /* White background */
+  padding: 15px;
+  border-right: 1px solid #ccc;
+}
+
+.left-content {
+  flex-grow: 1;
+  overflow-y: auto;
+}
+
+.right-frame {
+  width: 300px; /* Adjust as needed */
+  background-color: #f9f9f9; /* White frames */
+  padding: 15px;
+  border-left: 1px solid #ccc;
+  overflow-y: auto;
 }
 
 #map {
-  position: relative;
-  width: 100%;   /* Changed to make the map responsive */
-  height: 100vh; /* Changed to make the map fill the viewport */
-  background-color: transparent;
+  flex: 1; /* Takes up remaining space */
 }
 
-/* Control Styles */
-.sector-control, .cluster-control, .polygon-toggle-control {
-  background: rgba(255, 255, 255, 0.8);
+/* Dropdown Styles */
+.dropdown, .cluster-dropdown {
+  width: 100%;
+  padding: 8px;
+  margin-bottom: 15px;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+  box-sizing: border-box;
+}
+
+/* Overall Stats Button */
+#overall-stats-button {
+  width: 100%;
   padding: 10px;
-  border-radius: 5px;
-  margin-bottom: 10px;
-}
-
-.leaflet-pane {
-  z-index: 0;
-}
-
-/* Buttons inside sector control */
-.sector-control button {
-  width: 100%;
-  padding: 5px;
-  margin-top: 5px;
   background-color: #1f78b4;
   color: white;
   border: none;
-  border-radius: 3px;
-  cursor: pointer;
-}
-
-.sector-control button:hover {
-  background-color: #155d8b;
-}
-
-.sector-control button:disabled {
-  background-color: #ccc;
-  cursor: not-allowed;
-}
-
-/* Buttons inside cluster control */
-.cluster-control button {
-  width: 100%;
-  padding: 5px;
-  margin-top: 5px;
-  background-color: #1f78b4;
-  color: white;
-  border: none;
-  border-radius: 3px;
-  cursor: pointer;
-}
-
-.cluster-control button:hover {
-  background-color: #155d8b;
-}
-
-/* Style sector headers in cluster control */
-.sector-header {
-  font-weight: bold;
+  border-radius: 4px;
   cursor: pointer;
   margin-top: 10px;
+  display: none; /* Hidden by default */
 }
 
-.sector-clusters {
-  margin-left: 10px;
-}
-
-.sector-control select, .cluster-control select {
-  width: 100%;
-  padding: 5px;
-}
-
-.polygon-toggle-control button {
-  width: 100%;
-  padding: 5px;
-  background-color: #1f78b4;
-  color: white;
-  border: none;
-  border-radius: 3px;
-  cursor: pointer;
-}
-
-.polygon-toggle-control button:hover {
+#overall-stats-button:hover {
   background-color: #155d8b;
 }
 
@@ -95,7 +73,7 @@ body {
   background: rgba(255, 255, 255, 0.8);
   padding: 10px;
   border-radius: 5px;
-  max-width: 300px; /* Increased width */
+  max-width: 300px;
 }
 
 .info.legend .legend-header {
@@ -123,82 +101,116 @@ body {
   opacity: 0.7;
 }
 
-/* Position the info box */
-#info-box {
-  position: absolute;
-  top: 60px; /* Adjusted to prevent overlap with controls */
-  right: 10px;
-  width: 300px;
-  max-height: 80vh;
-  overflow-y: auto;
-  background-color:rgba(255, 255, 255, 0.95);
+/* Info Box Styles */
+.info-box {
+  background: white;
+  padding: 10px;
   border: 1px solid #ccc;
-  padding: 15px;
-  border-radius: 8px;
-  box-shadow: 0 2px 6px rgba(0,0,0,0.3);
-  z-index: 10000; /* Ensure it appears above map elements */
+  max-width: 100%; /* Ensure it doesn't exceed the parent width */
+  overflow: auto;
+  margin-top: auto; /* Pushes the info box to the bottom */
 }
 
-/* Hidden class to toggle visibility */
-.hidden {
+.info-box.hidden {
   display: none;
 }
 
-/* Style the content inside the info box */
-#info-box h3 {
-  margin-top: 0;
-}
-
-#info-box p {
-  margin: 5px 0;
-}
-
-#info-box strong {
-  color: #333;
-}
-
-/* Close button inside the info box */
 .info-box-close {
-  position: absolute;
-  top: 5px;
-  right: 10px;
-  background: none;
+  float: right;
+  background: transparent;
   border: none;
-  font-size: 18px;
+  font-size: 16px;
   cursor: pointer;
 }
 
-/* Popup Styles */
-.popup-content {
-  font-family: Arial, sans-serif;
-}
-
-.popup-content h3 {
-  margin-top: 0;
-}
-
-/* Dropdown Styles */
-select[multiple] {
-  height: auto;
-  max-height: 100px;
+/* Styles for the checkboxes container */
+.checkboxes-container {
+  border: 1px solid #ccc;
+  border-radius: 4px;
+  padding: 10px;
+  max-height: 200px; /* Adjust as needed */
   overflow-y: auto;
+  background-color: #fff;
+  margin-bottom: 15px;
+}
+
+/* Style for individual checkboxes */
+.checkboxes-container label {
+  display: block;
+  margin-bottom: 5px;
+  cursor: pointer;
+}
+
+.checkboxes-container input[type="checkbox"] {
+  margin-right: 5px;
+}
+
+/* Adjust the height for clusters container if needed */
+#cluster-checkboxes {
+  max-height: 250px; /* Adjust as needed */
+}
+
+/* Hide cluster selection initially */
+#cluster-section {
+  display: none; /* Hidden by default */
 }
 
 /* Responsive Adjustments */
-@media (max-width: 600px) {
-  .info.legend {
-    max-width: 200px;
+@media (max-width: 800px) {
+  .map-container {
+    flex-direction: column;
   }
 
-  .sector-control, .cluster-control, .polygon-toggle-control {
-    padding: 5px;
+  .left-frame, .right-frame {
+    width: 100%;
+    border: none;
   }
 
-  .sector-control button, .cluster-control button {
-    padding: 3px;
+  #map {
+    height: 60vh;
   }
+}
 
-  .polygon-toggle-control button {
-    padding: 3px;
-  }
+/* Layer Selection Styles */
+.left-frame h3, .right-frame h3 {
+  margin-top: 0;
+}
+
+.left-frame label {
+  margin-left: 5px;
+}
+
+/* Button styling */
+button {
+  background-color: #007BFF;
+  color: #fff;
+  border: none;
+  padding: 8px 12px;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 14px;
+}
+
+button:hover {
+  background-color: #0056b3;
+}
+
+.polygon-toggle-control {
+  background-color: rgba(255, 255, 255, 0.9);
+  padding: 10px;
+  border: 1px solid #ccc;
+  border-radius: 5px;
+  font-size: 14px;
+  box-shadow: 0 0 15px rgba(0,0,0,0.2);
+}
+
+.polygon-toggle-control label {
+  display: block;
+  margin-bottom: 5px;
+  font-weight: bold;
+}
+
+.polygon-toggle-control select {
+  width: 100%;
+  padding: 5px;
 }
