@@ -16,75 +16,83 @@
     href="https://unpkg.com/leaflet-search@3.0.0/dist/leaflet-search.min.css"
   />
 
+  <!-- Leaflet MarkerCluster CSS -->
+  <link
+    rel="stylesheet"
+    href="https://unpkg.com/leaflet.markercluster@1.5.3/dist/MarkerCluster.css"
+  />
+  <link
+    rel="stylesheet"
+    href="https://unpkg.com/leaflet.markercluster@1.5.3/dist/MarkerCluster.Default.css"
+  />
+
   <!-- Custom CSS -->
   <link rel="stylesheet" href="css/styles.css" />
-
-  <!-- Add the following CSS to style the Download Map control -->
-  <style>
-    /* Ensure the map container has a transparent background */
-    #map {
-      height: 100vh;
-      width: 100%;
-      background: transparent;
-    }
-
-    /* Style for the Download Map Leaflet control */
-    .leaflet-control-download {
-      background-color: white;
-      background-clip: padding-box;
-      border: 2px solid rgba(0,0,0,0.2);
-      border-radius: 4px;
-      box-shadow: 0 1px 5px rgba(0,0,0,0.65);
-      cursor: pointer;
-      padding: 5px 10px;
-      font: 14px/16px Arial, Helvetica, sans-serif;
-      margin: 10px;
-    }
-
-    .leaflet-control-download:hover {
-      background-color: #f4f4f4;
-    }
-
-    /* Optional: Style for the info box */
-    .info-box {
-      position: absolute;
-      top: 10px;
-      right: 10px;
-      background: white;
-      padding: 10px;
-      border: 1px solid #ccc;
-      z-index: 1000;
-      max-width: 300px;
-      overflow: auto;
-    }
-
-    .info-box.hidden {
-      display: none;
-    }
-
-    .info-box-close {
-      position: absolute;
-      top: 5px;
-      right: 5px;
-      background: transparent;
-      border: none;
-      font-size: 16px;
-      cursor: pointer;
-    }
-  </style>
-
 </head>
 <body>
-  <!-- Map Container -->
-  <div id="map"></div>
+  <div class="map-container">
+    <!-- Left Frame for Layer Selection -->
+    <div class="left-frame">
+      <h3>Layers</h3>
+      <div class="left-content">
+        <div id="layer-selection">
+          <input type="checkbox" id="local-authorities">
+          <label for="local-authorities">Local Authorities</label><br>
 
-  <!-- Info Box -->
-  <div id="info-box" class="info-box hidden">
-    <!-- Content will be injected by JavaScript -->
+          <input type="checkbox" id="final-areas">
+          <label for="final-areas">Final Areas</label><br>
+
+          <input type="checkbox" id="scaleup-density">
+          <label for="scaleup-density">Scaleup Density</label><br>
+
+          <input type="checkbox" id="avg-growth">
+          <label for="avg-growth">Avg Growth</label><br>
+        </div>
+      </div>
+
+      <!-- Info Box -->
+      <div id="info-box" class="info-box hidden">
+        <!-- Content will be injected by JavaScript -->
+      </div>
+    </div>
+
+    <!-- Map Container -->
+    <div id="map">
+      <!-- Map content -->
+      <!-- Removed duplicate info-box -->
+      <!-- Other controls -->
+    </div>
+
+    <!-- Right Frame for Sector and Cluster Selection -->
+    <div class="right-frame">
+      <h3>Sectors</h3>
+      
+      <!-- Select All/Deselect All for Sectors -->
+      <button id="select-all-sectors">Select All Sectors</button>
+      <button id="deselect-all-sectors">Deselect All Sectors</button><br>
+
+      <!-- Sector Checkboxes Container -->
+      <div id="sector-checkboxes" class="checkboxes-container">
+        <!-- Checkboxes will be populated by JavaScript -->
+      </div>
+
+      <button id="overall-stats-button">Overall Stats</button>
+
+      <!-- Cluster Selection Section -->
+      <div id="cluster-section">
+        <h3>Clusters</h3>
+        
+        <!-- Select All/Deselect All for Clusters -->
+        <button id="select-all-clusters">Select All Clusters</button>
+        <button id="deselect-all-clusters">Deselect All Clusters</button><br>
+
+        <!-- Cluster Checkboxes Container -->
+        <div id="cluster-checkboxes" class="checkboxes-container">
+          <!-- Checkboxes will be populated by JavaScript -->
+        </div>
+      </div>
+    </div>
   </div>
-
-  <!-- Remove the existing Export Button to avoid conflicts -->
-  <!-- <button id="export-map">Download Map</button> -->
 
   <!-- Leaflet JS -->
   <script
@@ -106,13 +114,17 @@
     src="https://cdnjs.cloudflare.com/ajax/libs/chroma-js/2.1.0/chroma.min.js"
   ></script>
 
-  <!-- Add html2canvas before your custom script -->
+  <!-- html2canvas -->
   <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
 
-
-  <!-- Leaflet Image Plugin (from unpkg) -->
+  <!-- Leaflet Image Plugin -->
   <script 
     src="https://unpkg.com/leaflet-image@0.4.0/leaflet-image.js"
+  ></script>
+
+  <!-- Leaflet MarkerCluster JS -->
+  <script
+  src="https://unpkg.com/leaflet.markercluster@1.5.3/dist/leaflet.markercluster.js"
   ></script>
 
   <!-- Turf.js -->
