@@ -1,5 +1,5 @@
 // Initialize the map
-var map = L.map('map').setView([54.5, -3], 6);
+var map = L.map('map').setView([54.5, -3], 5);
 
 // Add CartoDB Positron tile layer
 var baseTileLayer = L.tileLayer('https://{s}.basemaps.cartocdn.com/light_nolabels/{z}/{x}/{y}{r}.png', {
