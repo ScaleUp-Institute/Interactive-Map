@@ -1,11 +1,24 @@
-// Initialize the map
-var map = L.map('map').setView([54.5, -3], 6);
+// Define the UK bounds
+var ukBounds = L.latLngBounds(
+  L.latLng(49.5, -10.5), // Southwest coordinates (latitude, longitude)
+  L.latLng(61.0, 2.1)    // Northeast coordinates (latitude, longitude)
+);
+
+var map = L.map('map', {
+  maxBounds: ukBounds,
+  maxBoundsViscosity: 1.0,
+  minZoom: 5,  // Adjust as needed
+  maxZoom: 18  // Adjust as needed
+});
+
+// Set the view to the UK bounds
+map.fitBounds(ukBounds);
 
 // Add CartoDB Positron tile layer
 var baseTileLayer = L.tileLayer('https://{s}.basemaps.cartocdn.com/light_nolabels/{z}/{x}/{y}{r}.png', {
   attribution: '&copy; OpenStreetMap contributors &copy; CARTO',
   subdomains: 'abcd',
-  maxZoom: 19
+  noWrap: true
 }).addTo(map);
 
 // Map event listeners
@@ -2304,3 +2317,11 @@ function getContrastColor(hexColor) {
   // Return black for light backgrounds, white for dark backgrounds
   return luminance > 0.5 ? '#000000' : '#FFFFFF';
 }
+
+// Function to adjust the map on window resize
+function onWindowResize() {
+  map.invalidateSize();
+}
+
+// Add the event listener
+window.addEventListener('resize', onWindowResize);
