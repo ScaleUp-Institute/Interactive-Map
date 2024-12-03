@@ -10,6 +10,7 @@ body {
 /* Map and Container Styles */
 .map-container {
   display: flex;
+  flex-direction: row;
   height: 100vh;
   width: 100%;
 }
@@ -17,11 +18,12 @@ body {
 .left-frame {
   display: flex;
   flex-direction: column;
-  height: 100%;
-  width: 250px; /* Adjust width as needed */
-  background-color: #f9f9f9; /* White background */
+  width: 20%; /* Changed from fixed width to percentage */
+  min-width: 200px; /* Optional: Set a minimum width */
+  background-color: #f9f9f9;
   padding: 15px;
   border-right: 1px solid #ccc;
+  box-sizing: border-box;
 }
 
 .left-content {
@@ -30,15 +32,18 @@ body {
 }
 
 .right-frame {
-  width: 300px; /* Adjust as needed */
-  background-color: #f9f9f9; /* White frames */
+  width: 25%; /* Changed from fixed width to percentage */
+  min-width: 250px; /* Optional: Set a minimum width */
+  background-color: #f9f9f9;
   padding: 15px;
   border-left: 1px solid #ccc;
   overflow-y: auto;
+  box-sizing: border-box;
 }
 
 #map {
-  flex: 1; /* Takes up remaining space */
+  flex-grow: 1; /* Takes up remaining space */
+  height: 100%;
 }
 
 /* Dropdown Styles */
@@ -156,20 +161,35 @@ body {
 }
 
 /* Responsive Adjustments */
-@media (max-width: 800px) {
+@media (max-width: 1200px) {
+  .left-frame, .right-frame {
+    width: 25%; /* Adjust as needed */
+  }
+}
+
+@media (max-width: 992px) {
+  .left-frame, .right-frame {
+    width: 30%; /* Adjust as needed */
+  }
+}
+
+@media (max-width: 768px) {
   .map-container {
     flex-direction: column;
   }
 
   .left-frame, .right-frame {
     width: 100%;
+    height: auto;
     border: none;
+    border-bottom: 1px solid #ccc;
   }
 
   #map {
-    height: 60vh;
+    height: calc( 100vh - 'total height of left and right frames');
   }
 }
+
 
 /* Layer Selection Styles */
 .left-frame h3, .right-frame h3 {
@@ -320,4 +340,19 @@ button:hover {
 /* Hide the container by default */
 .hidden {
   display: none;
+}
+
+html, body {
+  height: 100%;
+  margin: 0;
+  padding: 0;
+}
+
+.map-container {
+  height: 100%;
+}
+
+#map {
+  flex-grow: 1;
+  height: 100%;
 }
