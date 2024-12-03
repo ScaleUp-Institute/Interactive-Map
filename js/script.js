@@ -32,7 +32,6 @@ var csvData;
 var localAuthoritiesLayer;
 var finalAreasLayer;
 var finalAreasGeoJSONData;
-var companyData = [];
 var scaleupData;
 var scaleupLayers = {};
 var searchControl;
@@ -53,6 +52,20 @@ var sectorStats = {}; // Object to hold overall statistics per sector
 var polygonToggleControl = null; // Initialize as null
 var allPolygons = [];
 var currentHighlightedPolygon = null;
+var allPolygons = []; // Global array to store all polygons
+var highlightedPolygons = [];
+var magnifyingGlass;
+
+// List of company numbers to exclude
+var excludedCompanyNumbers = [
+  '12405751','8924217','575914','7187537','9922859','8761455','1765758','3847202','10116333','10813936','10473308','8994234','OC321845',
+  '11523515','7075183','9010597','11041325','9805175','12336828','11924643','9688709','SC619434','10220212','3864068','10499190','7383076',
+  '8706503','11771128','4467860','11218066','4384008','8318444','123550','7622119','9618109','10611481','6894120','8100687','3280557',
+  '4036416','6841897','11769589','7875732','8943369','9892057','1800000','10546847','4156317','9467768','8778322','5528381','10902884',
+  '4978912','OC415130','10185006','9158610','12209449','9319771','2142875','6936153','3919664','8344447','3235601','8961638','4097099',
+  '12420613','4498663','8444296','10917030','7094561','11121433','11207381','5243851','8848940','11476842','9932290','11375584','10915172',
+  '12586871','3847379','7040707','9714903','7866563','3102360','10045407','9459339'
+];
 
 var layerNames = {
   'local-authorities': 'Local Authorities',
@@ -60,7 +73,6 @@ var layerNames = {
   'scaleup-density': 'Scaleup density per 100k (2022)',
   'avg-growth': 'Avg growth in scaleup density (2013-2022)'
 };
-
 
 var areaColors = {
   'Buckinghamshire': '#d0f0c0',                  // Light green
@@ -390,8 +402,6 @@ function addPolygonToggleControl() {
   polygonToggleControl.addTo(map);
 }
 
-
-
 function finalizeMapSetup() {
   console.log('finalizeMapSetup called'); // Debugging log
   updateSearchControl('');
@@ -670,17 +680,12 @@ function highlightPolygon(polygon) {
 
 // Define a function to reset polygon style to default
 function resetPolygonStyle(polygon) {
-  var clusterNumber = polygon.options.clusterNumber || '0';
-  var sectorName = polygon.options.sectorName || 'Unknown';
-  var polygonColor = sectorColors[sectorName] || '#FFFFFF';
-
   polygon.setStyle({
-    weight: 1,
-    color: polygonColor,
-    fillOpacity: 0.2
+    weight: polygon.originalStyle.weight,
+    color: polygon.originalStyle.color,
+    fillOpacity: polygon.originalStyle.fillOpacity
   });
 }
-
 
 function highlightFeature(e) {
   var layer = e.target;
@@ -1181,6 +1186,11 @@ function loadSectorsData(sectorsList) {
       });
     });
 
+    companyData = companyData.filter(function(company) {
+      var companyNumber = company.Companynumber.toString().trim();
+      return !excludedCompanyNumbers.includes(companyNumber);
+    });
+
     generateClusterColors();
     populateClusterCheckboxes(); // Updated function
     currentClusters = getAllClusterIds().filter(clusterId => currentSectors.includes(clusterId.split('_')[0]));
@@ -1512,10 +1522,12 @@ document.getElementById('deselect-all-sectors').addEventListener('click', functi
   handleSectorSelectionChange();
 });
 
-
 function updateClusterLayers() {
   console.log('updateClusterLayers called'); // Debugging log
   console.log('Current displayMode:', displayMode); // Debugging log
+
+  // Clear the global polygons array
+  allPolygons = []; // Add this line
 
   // Remove existing cluster layers
   for (var clusterId in clusterLayers) {
@@ -1641,96 +1653,92 @@ function updateClusterLayers() {
       polygonColor = sectorColors[sectorName] || '#FFFFFF';
     }
 
-   // Inside updateClusterLayers, when creating polygons
-if ((displayMode === 'polygons' || displayMode === 'both') && clusterNumber !== '0' && points.length >= 3) {
-  var polygon = L.polygon(convexHull(points), {
-    pane: 'polygonsPane',
-    color: polygonColor,
-    fillColor: polygonColor,
-    fillOpacity: 0.2,
-    weight: 1,
-    interactive: true,
-    clusterNumber: clusterNumber, // Custom property
-    sectorName: sectorName        // Custom property
-  });
+    // Inside updateClusterLayers, when creating polygons
+    if ((displayMode === 'polygons' || displayMode === 'both') && clusterNumber !== '0' && points.length >= 3) {
+      var polygon = L.polygon(convexHull(points), {
+        pane: 'polygonsPane',
+        color: polygonColor,
+        fillColor: polygonColor,
+        fillOpacity: 0.2,
+        weight: 1,
+        interactive: false // Set to false to prevent default event capturing
+      });
 
-  // Retrieve summary data for this cluster
-  var summary = clusterSummaryData[clusterId];
+      // Store original style properties
+      polygon.originalStyle = {
+        color: polygonColor,
+        weight: 1,
+        fillOpacity: 0.2
+      };
 
-  // Calculate aggregated statistics
-  var averageGrowthRate = growthRateCount > 0 ? (totalGrowthRate / growthRateCount) : null;
-  var femaleFoundedPercentage = clusters[clusterId].length > 0 ? (femaleFoundedCount / clusters[clusterId].length) * 100 : null;
+      // Retrieve summary data for this cluster
+      var summary = clusterSummaryData[clusterId];
 
-  // Prepare summary info
-  var companyCount = summary ? summary.companycount : clusters[clusterId].length;
-  var totalEmployees = summary ? Math.round(summary.total_employees) : 'N/A';
-  var totalTurnover = summary ? formatTurnover(summary.total_turnover) : 'N/A';
-  var averageGrowthRateDisplay = averageGrowthRate !== null ? (averageGrowthRate * 100).toFixed(1) + '%' : 'N/A';
-  var femaleFoundedPercentageDisplay = femaleFoundedPercentage !== null ? femaleFoundedPercentage.toFixed(1) + '%' : 'N/A';
-  var totalIUKFundingDisplay = totalIUKFunding > 0 ? formatTurnover(totalIUKFunding) : 'N/A';
+      // Calculate aggregated statistics
+      var averageGrowthRate = growthRateCount > 0 ? (totalGrowthRate / growthRateCount) : null;
+      var femaleFoundedPercentage = clusters[clusterId].length > 0 ? (femaleFoundedCount / clusters[clusterId].length) * 100 : null;
 
-  // Update polygon popup content to include new aggregated data
-  polygon.bindPopup(`
-    <div class="popup-content">
-      <p><strong>${clusterName}</strong></p>
-      <p><strong>Region:</strong> ${region}</p>
-      <p><strong>Sector:</strong> ${sectorName}</p>
-      <p><strong>Company Count:</strong> ${companyCount}</p>
-      <p><strong>Total Employees:</strong> ${totalEmployees}</p>
-      <p><strong>Total Turnover:</strong> ${totalTurnover}</p>
-      <p><strong>Average Growth Rate:</strong> ${averageGrowthRateDisplay}</p>
-      <p><strong>% Female-Founded Companies:</strong> ${femaleFoundedPercentageDisplay}</p>
-      <p><strong>Total IUK Grant Funding:</strong> ${totalIUKFundingDisplay}</p>
-    </div>
-  `);
+      // Prepare summary info
+      var companyCount = summary ? summary.companycount : clusters[clusterId].length;
+      var totalEmployees = summary ? Math.round(summary.total_employees) : 'N/A';
+      var totalTurnover = summary ? formatTurnover(summary.total_turnover) : 'N/A';
+      var averageGrowthRateDisplay = averageGrowthRate !== null ? (averageGrowthRate * 100).toFixed(1) + '%' : 'N/A';
+      var femaleFoundedPercentageDisplay = femaleFoundedPercentage !== null ? femaleFoundedPercentage.toFixed(1) + '%' : 'N/A';
+      var totalIUKFundingDisplay = totalIUKFunding > 0 ? formatTurnover(totalIUKFunding) : 'N/A';
 
-  // Add event handlers to manage highlighting and pop-ups
-  polygon.on({
-    mouseover: function(e) {
-      // If there's a previously highlighted polygon, reset its style
-      if (currentHighlightedPolygon && currentHighlightedPolygon !== e.target) {
-        resetPolygonStyle(currentHighlightedPolygon);
-      }
+      // Update polygon popup content to include new aggregated data
+      polygon.bindPopup(`
+        <div class="popup-content">
+          <p><strong>${clusterName}</strong></p>
+          <p><strong>Region:</strong> ${region}</p>
+          <p><strong>Sector:</strong> ${sectorName}</p>
+          <p><strong>Company Count:</strong> ${companyCount}</p>
+          <p><strong>Total Employees:</strong> ${totalEmployees}</p>
+          <p><strong>Total Turnover:</strong> ${totalTurnover}</p>
+          <p><strong>Average Growth Rate:</strong> ${averageGrowthRateDisplay}</p>
+          <p><strong>% Female-Founded Companies:</strong> ${femaleFoundedPercentageDisplay}</p>
+          <p><strong>Total IUK Grant Funding:</strong> ${totalIUKFundingDisplay}</p>
+        </div>
+      `);
 
-      // Highlight the current polygon
-      highlightPolygon(e.target);
+      // Add the polygon to the cluster group
+      clusterGroup.addLayer(polygon);
 
-      // Update the currently highlighted polygon reference
-      currentHighlightedPolygon = e.target;
-    },
-    mouseout: function(e) {
-      resetPolygonStyle(e.target);
-      currentHighlightedPolygon = null;
-    },
-    click: function(e) {
-      // Open the popup for the clicked polygon
-      e.target.openPopup();
+      // Store the polygon's layer and properties in the allPolygons array
+      allPolygons.push({
+        layer: polygon,
+        properties: {
+          clusterNumber: clusterNumber,
+          sectorName: sectorName,
+          clusterName: clusterName,
+          clusterId: clusterId,
+          region: region,
+          companyCount: companyCount,
+          totalEmployees: totalEmployees,
+          totalTurnover: totalTurnover,
+          averageGrowthRateDisplay: averageGrowthRateDisplay,
+          femaleFoundedPercentageDisplay: femaleFoundedPercentageDisplay,
+          totalIUKFundingDisplay: totalIUKFundingDisplay
+        }
+      });
     }
-  });
-
-  // Add the polygon to the cluster group
-  clusterGroup.addLayer(polygon);
-
-  // Store the polygon's layer and GeoJSON in the allPolygons array
-  var polygonGeoJSON = polygon.toGeoJSON();
-  allPolygons.push({
-    layer: polygon,
-    geojson: polygonGeoJSON
-  });
-}
 
     clusterLayers[clusterId] = clusterGroup;
     clusterGroup.addTo(map);
+
+    
   }
 
   // After all clusters are added to the map, update the legend
-  // Determine if sectors are selected
   if (currentSectors.length > 0) {
     updateLegend('Sectors');
   } else {
     updateLegend(''); // Hide the legend when no sectors are selected
   }
 }
+
+map.on('mousemove', handleMapMouseMove);
+map.on('click', handleMapClick);
 
 function generateClusterColors() {
   clusterColors = {}; // Reset cluster colors
@@ -1881,4 +1889,418 @@ function showClusterInfo(clusterInfo) {
   } else {
     console.error('Info box element not found');
   }
+}
+
+function handleMapClick(e) {
+  var latlng = e.latlng;
+  var polygonsAtPoint = [];
+
+  allPolygons.forEach(function(polygonData) {
+    var polygon = polygonData.layer;
+    if (isPointInPolygon(latlng, polygon)) {
+      // Check if the polygon is already in polygonsAtPoint
+      var alreadyAdded = polygonsAtPoint.some(function(pd) {
+        return pd.layer._leaflet_id === polygon._leaflet_id;
+      });
+
+      if (!alreadyAdded) {
+        polygonsAtPoint.push(polygonData);
+      }
+    }
+  });
+
+  if (polygonsAtPoint.length === 0) {
+    // Hide info box if no polygons are found
+    var infoBox = document.getElementById('info-box');
+    if (infoBox) {
+      infoBox.classList.add('hidden');
+    }
+  } else if (polygonsAtPoint.length === 1) {
+    // Show info for the single polygon
+    showPolygonInfo(polygonsAtPoint[0]);
+  } else {
+    // Multiple polygons: allow the user to select one
+    showPolygonSelectionDialog(polygonsAtPoint);
+  }
+}
+
+function isPointInPolygon(latlng, polygon) {
+  var layerPoint = map.latLngToLayerPoint(latlng);
+  var inside = false;
+  var parts = polygon._parts;
+
+  for (var i = 0; i < parts.length; i++) {
+    var part = parts[i];
+    var len = part.length;
+    for (var j = 0, k = len - 1; j < len; k = j++) {
+      var xi = part[j].x,
+          yi = part[j].y,
+          xj = part[k].x,
+          yj = part[k].y,
+          intersect = ((yi > layerPoint.y) !== (yj > layerPoint.y)) &&
+                      (layerPoint.x < (xj - xi) * (layerPoint.y - yi) / (yj - yi) + xi);
+      if (intersect) inside = !inside;
+    }
+  }
+
+  return inside;
+}
+
+function showPolygonInfo(polygonData) {
+  var props = polygonData.properties;
+  var sectorDisplayName = sectorDisplayNames[props.sectorName] || props.sectorName;
+
+  var content = `
+    <button id="info-box-close" class="info-box-close">&times;</button>
+    <h3>Cluster ${props.clusterNumber}</h3>
+    <p><strong>Region:</strong> ${props.region}</p>
+    <p><strong>Sector:</strong> ${sectorDisplayName}</p>
+    <p><strong>Company Count:</strong> ${props.companyCount}</p>
+    <p><strong>Total Employees:</strong> ${props.totalEmployees}</p>
+    <p><strong>Total Turnover:</strong> ${props.totalTurnover}</p>
+    <p><strong>Average Growth Rate:</strong> ${props.averageGrowthRateDisplay}</p>
+    <p><strong>% Female-Founded Companies:</strong> ${props.femaleFoundedPercentageDisplay}</p>
+    <p><strong>Total IUK Grant Funding:</strong> ${props.totalIUKFundingDisplay}</p>
+  `;
+
+  var infoBox = document.getElementById('info-box');
+  if (infoBox) {
+    infoBox.innerHTML = content;
+    infoBox.classList.remove('hidden');
+
+    // Add event listener for close button
+    var closeButton = document.getElementById('info-box-close');
+    if (closeButton) {
+      closeButton.addEventListener('click', function (e) {
+        infoBox.classList.add('hidden');
+        e.stopPropagation();
+      });
+    }
+  } else {
+    console.error('Info box element not found');
+  }
+}
+
+
+function showPolygonSelectionDialog(polygonsData) {
+  var content = `
+    <button id="info-box-close" class="info-box-close">&times;</button>
+    <h3>Select a Cluster</h3>
+    <ul>
+  `;
+
+  polygonsData.forEach(function (polygonData, index) {
+    var props = polygonData.properties;
+    content += `
+      <li>
+        <a href="#" data-index="${index}">${props.clusterName} - Sector: ${props.sectorName}</a>
+      </li>
+    `;
+  });
+
+  content += `</ul>`;
+
+  var infoBox = document.getElementById('info-box');
+  if (infoBox) {
+    infoBox.innerHTML = content;
+    infoBox.classList.remove('hidden');
+
+    // Add event listener for close button
+    var closeButton = document.getElementById('info-box-close');
+    if (closeButton) {
+      closeButton.addEventListener('click', function (e) {
+        infoBox.classList.add('hidden');
+        e.stopPropagation();
+      });
+    }
+
+    // Add event listeners for selection links
+    var links = infoBox.querySelectorAll('a[data-index]');
+    links.forEach(function (link) {
+      link.addEventListener('click', function (e) {
+        e.preventDefault();
+        var index = parseInt(e.currentTarget.getAttribute('data-index'));
+        showPolygonInfo(polygonsData[index]);
+      });
+    });
+  } else {
+    console.error('Info box element not found');
+  }
+}
+
+function handleMapMouseMove(e) {
+  var latlng = e.latlng;
+  var polygonsAtPoint = [];
+
+  // Reset styles for previously highlighted polygons
+  highlightedPolygons.forEach(function(polygon) {
+    resetPolygonStyle(polygon);
+  });
+  highlightedPolygons = [];
+
+  // Loop through all polygons to check if the cursor is over them
+  allPolygons.forEach(function(polygonData) {
+    var polygon = polygonData.layer;
+    if (isPointInPolygon(latlng, polygon)) {
+      polygonsAtPoint.push(polygon);
+    }
+  });
+
+  // Highlight all polygons under the cursor
+  polygonsAtPoint.forEach(function(polygon) {
+    highlightPolygon(polygon);
+    highlightedPolygons.push(polygon);
+  });
+}
+
+function isPointInPolygon(latlng, polygon) {
+  var layerPoint = map.latLngToLayerPoint(latlng);
+  var inside = false;
+  var parts = polygon._parts;
+
+  if (!parts) {
+    return false;
+  }
+
+  for (var i = 0; i < parts.length; i++) {
+    var part = parts[i];
+    var len = part.length;
+    for (var j = 0, k = len - 1; j < len; k = j++) {
+      var xi = part[j].x,
+          yi = part[j].y,
+          xj = part[k].x,
+          yj = part[k].y,
+          intersect = ((yi > layerPoint.y) !== (yj > layerPoint.y)) &&
+                      (layerPoint.x < (xj - xi) * (layerPoint.y - yi) / (yj - yi) + xi);
+      if (intersect) inside = !inside;
+    }
+  }
+
+  return inside;
+}
+
+function handleMapClick(e) {
+  var latlng = e.latlng;
+  var polygonsAtPoint = [];
+
+  allPolygons.forEach(function(polygonData) {
+    var polygon = polygonData.layer;
+    if (isPointInPolygon(latlng, polygon)) {
+      // Prevent duplicates
+      var alreadyAdded = polygonsAtPoint.some(function(pd) {
+        return pd.layer._leaflet_id === polygon._leaflet_id;
+      });
+
+      if (!alreadyAdded) {
+        polygonsAtPoint.push(polygonData);
+      }
+    }
+  });
+
+  if (polygonsAtPoint.length === 0) {
+    // Close any open popups
+    map.closePopup();
+  } else if (polygonsAtPoint.length === 1) {
+    // Show info for the single polygon in a popup at the clicked location
+    showPolygonInfoPopup(polygonsAtPoint[0], latlng);
+  } else {
+    // Multiple polygons: allow the user to select one via a popup
+    showPolygonSelectionPopup(polygonsAtPoint, latlng);
+  }
+}
+
+function showPolygonInfoPopup(polygonData, latlng) {
+  var props = polygonData.properties;
+  var sectorDisplayName = sectorDisplayNames[props.sectorName] || props.sectorName;
+
+  var content = `
+    <div class="popup-content">
+      <h3>Cluster ${props.clusterNumber}</h3>
+      <p><strong>Region:</strong> ${props.region}</p>
+      <p><strong>Sector:</strong> ${sectorDisplayName}</p>
+      <p><strong>Company Count:</strong> ${props.companyCount}</p>
+      <p><strong>Total Employees:</strong> ${props.totalEmployees}</p>
+      <p><strong>Total Turnover:</strong> ${props.totalTurnover}</p>
+      <p><strong>Average Growth Rate:</strong> ${props.averageGrowthRateDisplay}</p>
+      <p><strong>% Female-Founded Companies:</strong> ${props.femaleFoundedPercentageDisplay}</p>
+      <p><strong>Total IUK Grant Funding:</strong> ${props.totalIUKFundingDisplay}</p>
+    </div>
+  `;
+
+  L.popup()
+    .setLatLng(latlng)
+    .setContent(content)
+    .openOn(map);
+}
+
+
+function showPolygonSelectionPopup(polygonsData, latlng) {
+  var content = document.createElement('div');
+  content.className = 'popup-content';
+
+  var tabsContainer = document.createElement('div');
+  tabsContainer.className = 'tabs-container';
+
+  var tabLinks = document.createElement('ul');
+  tabLinks.className = 'tab-links';
+
+  var tabContentContainer = document.createElement('div');
+  tabContentContainer.className = 'tab-content';
+
+  var currentlyHighlightedPolygon = null; // For tracking the highlighted polygon
+
+  polygonsData.forEach(function (polygonData, index) {
+    var props = polygonData.properties;
+    var sectorDisplayName = sectorDisplayNames[props.sectorName] || props.sectorName;
+
+    // Get the sector color
+    var sectorColor = sectorColors[props.sectorName] || '#FFFFFF';
+
+    // Create tab link
+    var tabLinkItem = document.createElement('li');
+    var tabLink = document.createElement('a');
+    tabLink.href = '#';
+    tabLink.setAttribute('data-index', index);
+
+    // Only display the cluster number
+    tabLink.textContent = `Cluster ${props.clusterNumber}`;
+
+    // Apply the sector color as the background color
+    tabLink.style.backgroundColor = sectorColor;
+
+    // Adjust the text color for readability
+    var textColor = getContrastColor(sectorColor);
+    tabLink.style.color = textColor;
+
+    if (index === 0) {
+      tabLinkItem.classList.add('active');
+      // Set active tab styles with darker shade
+      var darkerColor = chroma(sectorColor).darken(1).hex();
+      tabLink.style.backgroundColor = darkerColor;
+      tabLink.style.color = getContrastColor(darkerColor);
+    }
+
+    tabLinkItem.appendChild(tabLink);
+    tabLinks.appendChild(tabLinkItem);
+
+    // Create tab content
+    var tabContent = document.createElement('div');
+    tabContent.className = 'tab';
+    tabContent.setAttribute('data-index', index);
+    if (index === 0) {
+      tabContent.classList.add('active');
+    }
+
+    // Populate tab content with polygon information
+    tabContent.innerHTML = `
+      <p><strong>Region:</strong> ${props.region}</p>
+      <p><strong>Sector:</strong> ${sectorDisplayName}</p>
+      <p><strong>Company Count:</strong> ${props.companyCount}</p>
+      <p><strong>Total Employees:</strong> ${props.totalEmployees}</p>
+      <p><strong>Total Turnover:</strong> ${props.totalTurnover}</p>
+      <p><strong>Average Growth Rate:</strong> ${props.averageGrowthRateDisplay}</p>
+      <p><strong>% Female-Founded Companies:</strong> ${props.femaleFoundedPercentageDisplay}</p>
+      <p><strong>Total IUK Grant Funding:</strong> ${props.totalIUKFundingDisplay}</p>
+    `;
+
+    tabContentContainer.appendChild(tabContent);
+
+    // Attach event listener to tab link
+    tabLink.addEventListener('click', function (e) {
+      e.preventDefault();
+      var idx = e.currentTarget.getAttribute('data-index');
+      switchTab(idx);
+    });
+  });
+
+  tabsContainer.appendChild(tabLinks);
+  tabsContainer.appendChild(tabContentContainer);
+  content.appendChild(tabsContainer);
+
+  var popup = L.popup()
+    .setLatLng(latlng)
+    .setContent(content)
+    .openOn(map);
+
+  function switchTab(index) {
+    // Remove 'active' class from all tab links and contents
+    var allTabLinks = tabLinks.querySelectorAll('li');
+    var allTabContents = tabContentContainer.querySelectorAll('.tab');
+
+    allTabLinks.forEach(function (linkItem) {
+      linkItem.classList.remove('active');
+      // Reset tab link styles
+      var link = linkItem.querySelector('a');
+      var sectorColor = sectorColors[polygonsData[link.getAttribute('data-index')].properties.sectorName] || '#FFFFFF';
+      link.style.backgroundColor = sectorColor;
+      link.style.color = getContrastColor(sectorColor);
+    });
+
+    allTabContents.forEach(function (tabContent) {
+      tabContent.classList.remove('active');
+    });
+
+    // Add 'active' class to the selected tab link and content
+    var selectedTabLinkItem = tabLinks.querySelector(`a[data-index="${index}"]`).parentElement;
+    selectedTabLinkItem.classList.add('active');
+
+    // Set active tab link styles with darker shade
+    var selectedLink = selectedTabLinkItem.querySelector('a');
+    var sectorColor = sectorColors[polygonsData[index].properties.sectorName] || '#FFFFFF';
+    var darkerColor = chroma(sectorColor).darken(1).hex();
+    selectedLink.style.backgroundColor = darkerColor;
+    selectedLink.style.color = getContrastColor(darkerColor);
+
+    var selectedTabContent = tabContentContainer.querySelector(`.tab[data-index="${index}"]`);
+    selectedTabContent.classList.add('active');
+
+    // Highlight the corresponding polygon
+    highlightSelectedPolygon(polygonsData[index].layer);
+  }
+
+  function highlightSelectedPolygon(polygon) {
+    // Reset previously highlighted polygon
+    if (currentlyHighlightedPolygon && currentlyHighlightedPolygon !== polygon) {
+      resetPolygonStyle(currentlyHighlightedPolygon);
+    }
+
+    // Highlight the selected polygon
+    highlightPolygon(polygon);
+
+    // Store the current polygon
+    currentlyHighlightedPolygon = polygon;
+  }
+
+  // Highlight the first polygon by default
+  highlightSelectedPolygon(polygonsData[0].layer);
+
+  // Add event listener for popup close to reset highlighting
+  map.on('popupclose', function () {
+    if (currentlyHighlightedPolygon) {
+      resetPolygonStyle(currentlyHighlightedPolygon);
+      currentlyHighlightedPolygon = null;
+    }
+  });
+}
+
+function getContrastColor(hexColor) {
+  // Remove '#' if present
+  hexColor = hexColor.replace('#', '');
+
+  // Convert short format like 'fff' to 'ffffff'
+  if (hexColor.length === 3) {
+    hexColor = hexColor.split('').map(function (hex) {
+      return hex + hex;
+    }).join('');
+  }
+
+  var r = parseInt(hexColor.substr(0, 2), 16);
+  var g = parseInt(hexColor.substr(2, 2), 16);
+  var b = parseInt(hexColor.substr(4, 2), 16);
+
+  // Calculate luminance
+  var luminance = (0.299 * r + 0.587 * g + 0.114 * b) / 255;
+
+  // Return black for light backgrounds, white for dark backgrounds
+  return luminance > 0.5 ? '#000000' : '#FFFFFF';
 }
