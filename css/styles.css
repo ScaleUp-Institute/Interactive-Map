@@ -223,3 +223,101 @@ button:hover {
   opacity: 0.7;  /* Optional: Adjust opacity */
   pointer-events: none; /* Ensures the watermark does not interfere with map interactions */
 }
+
+.popup-content {
+  max-height: 200px;
+  overflow-y: auto;
+}
+
+.popup-content h3 {
+  margin-top: 0;
+}
+
+.popup-content ul {
+  list-style: none;
+  padding: 0;
+}
+
+.popup-content li {
+  margin: 5px 0;
+}
+
+.popup-content a {
+  text-decoration: none;
+  color: #007bff;
+}
+
+.popup-content a:hover {
+  text-decoration: underline;
+}
+
+/* Popup content */
+.popup-content {
+  max-height: 300px;
+  overflow-y: auto;
+}
+
+/* Tabs container */
+.tabs-container {
+  width: 100%;
+}
+
+/* Tab links */
+.tab-links {
+  list-style: none;
+  padding: 0;
+  margin: 0 0 10px 0;
+  display: flex;
+  border-bottom: 1px solid #ccc;
+}
+
+.tab-links li {
+  margin: 0;
+}
+
+.tab-links li a {
+  display: block;
+  padding: 5px 10px;
+  background: transparent; /* Remove background since we set it dynamically */
+  color: inherit; /* Use inherited color */
+  text-decoration: none;
+  border: 1px solid #ccc;
+  border-bottom: none;
+}
+
+.tab-links li.active a {
+  border-bottom: 1px solid #fff;
+}
+
+.tab-links li a:hover {
+  opacity: 0.8; /* Slight opacity change on hover */
+}
+
+/* Tab content */
+.tab-content .tab {
+  display: none;
+}
+
+.tab-content .tab.active {
+  display: block;
+}
+
+.tab-content p {
+  margin: 5px 0;
+}
+
+#polygon-info {
+  /* Adjust as needed to fit within your right margin */
+  max-height: 400px;
+  overflow-y: auto;
+  /* Additional styling */
+  padding: 10px;
+  border: 1px solid #ccc;
+  background-color: #fff;
+  margin-top: 10px;
+}
+
+/* Hide the container by default */
+.hidden {
+  display: none;
+}
