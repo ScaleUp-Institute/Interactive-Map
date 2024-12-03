@@ -21,6 +21,10 @@
     rel="stylesheet"
     href="https://unpkg.com/leaflet.markercluster@1.5.3/dist/MarkerCluster.css"
   />
+
+  <!-- Leaflet.MagnifyingGlass CSS -->
+  <link rel="stylesheet" href="leaflet.magnifyingglass.css">
+
   <link
     rel="stylesheet"
     href="https://unpkg.com/leaflet.markercluster@1.5.3/dist/MarkerCluster.Default.css"
@@ -76,7 +80,7 @@
         <!-- Checkboxes will be populated by JavaScript -->
       </div>
 
-      <button id="overall-stats-button">Overall Stats</button>
+      <button id="overall-stats-button">Sector Stats</button>
 
       <!-- Cluster Selection Section -->
       <div id="cluster-section">
@@ -89,6 +93,9 @@
         <!-- Cluster Checkboxes Container -->
         <div id="cluster-checkboxes" class="checkboxes-container">
           <!-- Checkboxes will be populated by JavaScript -->
+
+      <!-- New polygon info container -->
+      <div id="polygon-info" class="polygon-info hidden"></div>
         </div>
       </div>
     </div>
@@ -125,6 +132,9 @@
     src="https://unpkg.com/leaflet-image@0.4.0/leaflet-image.js"
   ></script>
 
+  <!-- Leaflet.MagnifyingGlass JavaScript -->
+  <script src="leaflet.magnifyingglass.js"></script>
+
   <!-- Leaflet MarkerCluster JS -->
   <script
   src="https://unpkg.com/leaflet.markercluster@1.5.3/dist/leaflet.markercluster.js"
@@ -135,6 +145,19 @@
 
   <!-- Include Turf.js from CDN -->
   <script src="https://cdnjs.cloudflare.com/ajax/libs/Turf.js/6.5.0/turf.min.js"></script>
+
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/chroma-js/2.1.0/chroma.min.js"></script>
+
+  <script src="https://unpkg.com/@turf/turf@6.5.0/turf.min.js"></script>
+
+  <script src="https://unpkg.com/concaveman@1.2.0/concaveman.min.js"></script>
+
+  <!-- Include RBush via CDN -->
+  <script src="https://unpkg.com/rbush@3.0.1/rbush.min.js"></script>
+
+  <script src="https://unpkg.com/leaflet-geometryutil"></script>
+
+  <script src="leaflet.geometryutil.js"></script>
 
   <!-- Custom JS -->
   <script src="js/script.js"></script>
