@@ -1,25 +1,92 @@
-// Define the UK bounds
-var ukBounds = L.latLngBounds(
-  L.latLng(49.5, -10.5), // Southwest coordinates (latitude, longitude)
-  L.latLng(61.0, 2.1)    // Northeast coordinates (latitude, longitude)
+// Define the UK bounds for larger screens (landscape)
+var ukBoundsLandscape = L.latLngBounds(
+  L.latLng(49.5, -10.5), // Southwest coordinates
+  L.latLng(61.0, 2.1)    // Northeast coordinates
 );
 
-var map = L.map('map', {
-  maxBounds: ukBounds,
-  maxBoundsViscosity: 1.0,
-  minZoom: 5,  // Adjust as needed
-  maxZoom: 18  // Adjust as needed
-});
-
-// Set the view to the UK bounds
-map.fitBounds(ukBounds);
-
-// Add CartoDB Positron tile layer
-var baseTileLayer = L.tileLayer('https://{s}.basemaps.cartocdn.com/light_nolabels/{z}/{x}/{y}{r}.png', {
+// Define base map layers
+var lightMap = L.tileLayer('https://{s}.basemaps.cartocdn.com/light_nolabels/{z}/{x}/{y}{r}.png', {
   attribution: '&copy; OpenStreetMap contributors &copy; CARTO',
   subdomains: 'abcd',
   noWrap: true
-}).addTo(map);
+});
+
+var darkMap = L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', {
+  attribution: '&copy; OpenStreetMap contributors &copy; CARTO',
+  subdomains: 'abcd',
+  noWrap: true
+});
+
+// Satellite Map using Esri
+var satelliteMap = L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}', {
+  attribution: 'Tiles &copy; Esri &mdash; Source: Esri',
+  noWrap: true
+});
+
+var streetMap = L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+  attribution: '&copy; OpenStreetMap contributors',
+  noWrap: true
+});
+
+// Create an object to hold the base layers
+var baseMaps = {
+  'Light Map': lightMap,
+  'Dark Map': darkMap,
+  'Satellite Map': satelliteMap,
+  'Street Map': streetMap
+};
+
+// **Define the universityLayer before using it**
+var universityLayer = L.layerGroup();
+// You can populate universityLayer later in your code when the data is available
+
+// **Create an object to hold the overlay layers**
+var overlays = {
+  // Add other overlays as needed
+};
+
+// Create the map instance
+var map = L.map('map', {
+  maxBoundsViscosity: 1.0,
+  minZoom: 4,
+  maxZoom: 18,
+  layers: [lightMap] // Set the default base layer here
+});
+
+// Call the function to set the initial map view
+setMapViewBasedOnScreenSize();
+
+// Remove the default zoom control and re-add it to the desired position
+map.removeControl(map.zoomControl);
+L.control.zoom({ position: 'topleft' }).addTo(map);
+
+// **Add the layer control to the map**
+L.control.layers(baseMaps, overlays, { position: 'topleft' }).addTo(map);
+
+// Function to set the map view based on screen size
+function setMapViewBasedOnScreenSize() {
+  var isPortrait = window.innerHeight > window.innerWidth;
+
+  if (isPortrait) {
+    // On portrait screens (smartphones), set a different center and zoom level
+    var centerLatLng = [54.5, -4.0]; // Adjust center as needed
+    var zoomLevel = 6; // Increase zoom level to zoom in on the UK
+
+    map.setView(centerLatLng, zoomLevel);
+
+    // Adjust maxBounds for portrait mode to prevent panning too far
+    map.setMaxBounds([
+      [49.5, -13.0], // Southwest coordinates
+      [61.0, 5.0]    // Northeast coordinates
+    ]);
+  } else {
+    // On landscape screens, fit the UK bounds
+    map.fitBounds(ukBoundsLandscape);
+
+    // Set maxBounds to the landscape bounds
+    map.setMaxBounds(ukBoundsLandscape);
+  }
+}
 
 // Map event listeners
 // Hide info box when clicking on the map (outside polygons)
@@ -68,6 +135,8 @@ var currentHighlightedPolygon = null;
 var allPolygons = []; // Global array to store all polygons
 var highlightedPolygons = [];
 var magnifyingGlass;
+var universityData = [];
+var universityLayer = L.layerGroup();
 
 // List of company numbers to exclude
 var excludedCompanyNumbers = [
@@ -370,6 +439,22 @@ function loadClusterRegions(callback) {
     }
   });
 }
+
+// Load University Data
+Papa.parse('data/university_data.csv', {
+  header: true,
+  download: true,
+  dynamicTyping: true,
+  complete: function(results) {
+    universityData = results.data;
+    console.log('University data loaded:', universityData);
+
+    // After loading data, update the university layer if needed
+    if (document.getElementById('show-universities').checked) {
+      updateUniversityLayer();
+    }
+  }
+});
 
 function addPolygonToggleControl() {
   if (polygonToggleControl) {
@@ -785,43 +870,6 @@ function onEachScaleupFeatureFactory(columnName) {
   };
 }
 
-//function addLayerControl() {
- /* var overlays = {
-    'Local Authorities': localAuthoritiesLayer,
-    'Final Areas': finalAreasLayer,
-    'Scaleup density per 100k (2022)': scaleupLayers['Scaleup density per 100k (2022)'],
-    'Avg growth in scaleup density (2013-2022)': scaleupLayers['Avg growth in scaleup density (2013-2022)']
-  };
-
-  if (layerControl) {
-    map.removeControl(layerControl);
-  }
-
-  layerControl = L.control.layers({}, overlays, { collapsed: false }).addTo(map);
-
-  map.on('overlayadd', function (e) {
-    removeClusterLayers();
-    var layerName = getLayerName(e.layer);
-    updateLegend(layerName);
-    updateSearchControl(layerName);
-  });
-
-  map.on('overlayremove', function (e) {
-    var layerName = getLayerName(e.layer);
-    updateLegend('');
-    updateSearchControl('');
-  });
-
-  function getLayerName(layer) {
-    for (var name in overlays) {
-      if (overlays[name] === layer) {
-        return name;
-      }
-    }
-    return '';
-  }
-}
-*/
 function addLegend() {
   if (legend) {
     map.removeControl(legend);
@@ -1411,13 +1459,17 @@ var companyClusterLayer = L.geoJSON(null, {
 function handleSectorSelectionChange() {
   // Update the currentSectors array based on checked checkboxes
   currentSectors = Array.from(document.querySelectorAll('.sector-checkbox:checked')).map(cb => cb.value);
-  
+
   var layerCheckboxes = document.querySelectorAll('#layer-selection input[type=checkbox]');
-  
+
   if (currentSectors.length > 0) {
-    // Deselect and uncheck all map layers
+
+    // Show the "Show Universities" checkbox
+    document.getElementById('universities-option').style.display = 'block';
+
+    // Deselect and uncheck all map layers except "Show Universities"
     layerCheckboxes.forEach(function (layerCheckbox) {
-      if (layerCheckbox.checked) {
+      if (layerCheckbox.checked && layerCheckbox.id !== 'show-universities') {
         layerCheckbox.checked = false;
         // Remove layer from map
         switch (layerCheckbox.id) {
@@ -1442,7 +1494,8 @@ function handleSectorSelectionChange() {
             }
             break;
           default:
-            console.warn('Unknown layer:', layerCheckbox.id);
+            // Do nothing for unknown layers
+            break;
         }
       }
     });
@@ -1453,23 +1506,31 @@ function handleSectorSelectionChange() {
 
     // Load sectors data
     loadSectorsData(currentSectors);
-    
+
     // Show overall stats button
     document.getElementById('overall-stats-button').style.display = 'block';
 
     // Show the Display Mode Control
     addPolygonToggleControl();
+
+    // Update university markers
+    updateUniversityLayer();
   } else {
     // Enable map layer checkboxes (implementation depends on your specific requirements)
     // For example, re-enable previously selected layers or keep them disabled
 
+    // Hide the "Show Universities" checkbox and remove university markers
+    document.getElementById('universities-option').style.display = 'none';
+    document.getElementById('show-universities').checked = false;
+    updateUniversityLayer();
+
     // Clear clusters if no sectors are selected
     currentClusters = [];
     removeClusterLayers();
-    
+
     // Hide overall stats button
     document.getElementById('overall-stats-button').style.display = 'none';
-  
+
     // Hide the legend
     updateLegend('');
 
@@ -1480,6 +1541,11 @@ function handleSectorSelectionChange() {
       displayMode = 'both'; // Reset to default or any desired value
       console.log('Display Mode Control removed.');
       updateClusterLayers(); // Update the map layers based on the new displayMode
+    }
+
+    // Remove university markers from the map
+    if (map.hasLayer(universityLayer)) {
+      map.removeLayer(universityLayer);
     }
   }
 }
@@ -2318,10 +2384,84 @@ function getContrastColor(hexColor) {
   return luminance > 0.5 ? '#000000' : '#FFFFFF';
 }
 
-// Function to adjust the map on window resize
+// Handle window resize
 function onWindowResize() {
   map.invalidateSize();
+  setMapViewBasedOnScreenSize();
+}
+window.addEventListener('resize', onWindowResize);
+
+// Initialize a layer group to hold university markers
+var universityLayer = L.layerGroup();
+
+// Function to update the display of universities
+function updateUniversityLayer() {
+  var showUniversities = document.getElementById('show-universities').checked;
+
+  if (showUniversities) {
+    addUniversitiesToMap();
+  } else {
+    if (map.hasLayer(universityLayer)) {
+      map.removeLayer(universityLayer);
+    }
+  }
 }
 
-// Add the event listener
-window.addEventListener('resize', onWindowResize);
+
+// Event listener for the checkbox
+document.getElementById('show-universities').addEventListener('change', updateUniversityLayer);
+
+function addUniversitiesToMap() {
+  // Clear any existing markers
+  universityLayer.clearLayers();
+
+  // Get the selected sectors
+  var selectedSectors = currentSectors;
+
+  universityData.forEach(function(university) {
+    var lat = university.Latitude;
+    var lng = university.Longitude;
+    var sector = university.Sector;
+
+    // Check if the university's sector is in the selected sectors
+    if (selectedSectors.includes(sector)) {
+      if (lat && lng) {
+        // Create a marker with the custom icon
+        var marker = L.marker([lat, lng], {
+          icon: universityIcon
+        });
+
+        // Bind a popup to the marker
+        marker.bindPopup(`
+          <div class="popup-content">
+            <p><strong>University Name:</strong> ${university['University Name']}</p>
+            <p><strong>Faculty Name:</strong> ${university['Faculty name']}</p>
+            <p><strong>Sector:</strong> ${sector}</p>
+          </div>
+        `);
+
+        universityLayer.addLayer(marker);
+      } else {
+        console.warn('Invalid coordinates for university:', university);
+      }
+    }
+  });
+
+  // Add the university layer to the map
+  universityLayer.addTo(map);
+}
+
+function getSelectedSectors() {
+  return currentSectors; // Replace with your actual variable or logic
+}
+
+// Define the custom icon for university markers
+var universityIcon = L.icon({
+  iconUrl: 'data/university_marker.png', // Path to your image
+  iconSize: [35, 35], // Size of the icon [width, height]
+  iconAnchor: [12, 41], // Point of the icon which corresponds to marker's location
+  popupAnchor: [0, -41], // Point from which the popup should open relative to the iconAnchor
+  shadowUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-shadow.png', // Optional
+  shadowSize: [35, 35], // Optional
+  shadowAnchor: [12, 41] // Optional
+});
