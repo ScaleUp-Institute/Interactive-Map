@@ -176,17 +176,16 @@ body {
 @media (max-width: 768px) {
   .map-container {
     flex-direction: column;
+    height: 100vh; /* Ensure it takes up the full viewport height */
   }
 
   .left-frame, .right-frame {
-    width: 100%;
-    height: auto;
-    border: none;
-    border-bottom: 1px solid #ccc;
+    display: none; /* Hide side frames on small screens */
   }
 
   #map {
-    height: calc( 100vh - 'total height of left and right frames');
+    flex-grow: 1;
+    height: 100%; /* Map takes the full available height */
   }
 }
 
@@ -355,4 +354,27 @@ html, body {
 #map {
   flex-grow: 1;
   height: 100%;
+}
+
+/* Base Map Control Styles */
+.base-map-control {
+  background: #fff;
+  padding: 5px;
+}
+
+.base-map-control .base-map-button {
+  display: block;
+  padding: 5px;
+  text-decoration: none;
+  color: #000;
+}
+
+.base-map-control .base-map-button:hover {
+  background: #e9e9e9;
+}
+
+.base-map-control select {
+  width: 100%;
+  padding: 5px;
+  font-size: 14px;
 }
