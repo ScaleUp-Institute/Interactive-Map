@@ -38,7 +38,9 @@ var baseMaps = {
 
 // **Define the universityLayer before using it**
 var universityLayer = L.layerGroup();
-// You can populate universityLayer later in your code when the data is available
+
+// Define the infrastructure layer group
+var infrastructureLayer = L.layerGroup();
 
 // **Create an object to hold the overlay layers**
 var overlays = {
@@ -136,6 +138,7 @@ var allPolygons = []; // Global array to store all polygons
 var highlightedPolygons = [];
 var magnifyingGlass;
 var universityData = [];
+var infrastructureData = [];
 var universityLayer = L.layerGroup();
 
 // List of company numbers to exclude
@@ -449,10 +452,22 @@ Papa.parse('data/university_data.csv', {
     universityData = results.data;
     console.log('University data loaded:', universityData);
 
-    // After loading data, update the university layer if needed
-    if (document.getElementById('show-universities').checked) {
-      updateUniversityLayer();
-    }
+    // Remove the code that checks `show-universities` here.
+    // The layers will be handled by updateOverlays() now.
+  }
+});
+
+Papa.parse('data/Infrastructure_data.csv', {
+  download: true,
+  header: true,
+  dynamicTyping: true,
+  skipEmptyLines: true,
+  complete: function(results) {
+    var data = results.data;
+    populateInfrastructureLayer(data);
+  },
+  error: function(error) {
+    console.error('Error parsing business parks CSV:', error);
   }
 });
 
@@ -607,7 +622,23 @@ document.querySelectorAll('#layer-selection input[type=checkbox]').forEach(funct
       updateLegend('');
       updateSearchControl('');
     }
-  });
+      // After handling layer selection, check if no sectors are chosen
+      if (currentSectors.length === 0) {
+        // Remove any university or infrastructure markers
+        if (map.hasLayer(universityLayer)) {
+          map.removeLayer(universityLayer);
+        }
+        if (map.hasLayer(infrastructureLayer)) {
+          map.removeLayer(infrastructureLayer);
+        }
+
+        // Set the overlay dropdown to 'none'
+        var overlaySelect = document.getElementById('overlay-select');
+        if (overlaySelect) {
+          overlaySelect.value = 'none';
+  }
+}
+});
 });
 
 
@@ -1463,15 +1494,9 @@ function handleSectorSelectionChange() {
   var layerCheckboxes = document.querySelectorAll('#layer-selection input[type=checkbox]');
 
   if (currentSectors.length > 0) {
-
-    // Show the "Show Universities" checkbox
-    document.getElementById('universities-option').style.display = 'block';
-
-    // Deselect and uncheck all map layers except "Show Universities"
     layerCheckboxes.forEach(function (layerCheckbox) {
       if (layerCheckbox.checked && layerCheckbox.id !== 'show-universities') {
         layerCheckbox.checked = false;
-        // Remove layer from map
         switch (layerCheckbox.id) {
           case 'local-authorities':
             if (map.hasLayer(localAuthoritiesLayer)) {
@@ -1500,54 +1525,39 @@ function handleSectorSelectionChange() {
       }
     });
 
-    // Update legend and search control
-    updateLegend(''); // Hide the legend
-    updateSearchControl(''); // Remove the search control
+    updateLegend('');
+    updateSearchControl('');
 
-    // Load sectors data
     loadSectorsData(currentSectors);
 
-    // Show overall stats button
     document.getElementById('overall-stats-button').style.display = 'block';
-
-    // Show the Display Mode Control
     addPolygonToggleControl();
 
-    // Update university markers
-    updateUniversityLayer();
+    // Remove the call to updateUniversityLayer(), as that function no longer exists
+    // updateUniversityLayer();
+
   } else {
-    // Enable map layer checkboxes (implementation depends on your specific requirements)
-    // For example, re-enable previously selected layers or keep them disabled
-
-    // Hide the "Show Universities" checkbox and remove university markers
-    document.getElementById('universities-option').style.display = 'none';
-    document.getElementById('show-universities').checked = false;
-    updateUniversityLayer();
-
-    // Clear clusters if no sectors are selected
     currentClusters = [];
     removeClusterLayers();
 
-    // Hide overall stats button
     document.getElementById('overall-stats-button').style.display = 'none';
-
-    // Hide the legend
     updateLegend('');
 
-    // Remove the Display Mode Control
     if (polygonToggleControl) {
       map.removeControl(polygonToggleControl);
       polygonToggleControl = null;
-      displayMode = 'both'; // Reset to default or any desired value
+      displayMode = 'both';
       console.log('Display Mode Control removed.');
-      updateClusterLayers(); // Update the map layers based on the new displayMode
+      updateClusterLayers();
     }
 
-    // Remove university markers from the map
     if (map.hasLayer(universityLayer)) {
       map.removeLayer(universityLayer);
     }
   }
+
+  // Now call updateOverlays() at the end to refresh the infrastructure and university layers
+  updateOverlays();
 }
 
 function populateSectorCheckboxes() {
@@ -2394,22 +2404,49 @@ window.addEventListener('resize', onWindowResize);
 // Initialize a layer group to hold university markers
 var universityLayer = L.layerGroup();
 
-// Function to update the display of universities
-function updateUniversityLayer() {
-  var showUniversities = document.getElementById('show-universities').checked;
+// Add event listener for the overlay dropdown
+var overlaySelect = document.getElementById('overlay-select');
+overlaySelect.addEventListener('change', updateOverlays);
 
-  if (showUniversities) {
+function updateOverlays() {
+  var value = overlaySelect.value;
+
+  // Clear layers first
+  if (map.hasLayer(universityLayer)) {
+    map.removeLayer(universityLayer);
+  }
+  if (map.hasLayer(infrastructureLayer)) {
+    map.removeLayer(infrastructureLayer);
+  }
+
+  if (value === 'universities') {
     addUniversitiesToMap();
-  } else {
-    if (map.hasLayer(universityLayer)) {
-      map.removeLayer(universityLayer);
+    // Add only universityLayer
+    if (universityLayer.getLayers().length > 0) {
+      universityLayer.addTo(map);
+    }
+
+  } else if (value === 'infrastructure') {
+    addInfrastructureToMap();
+    // Add only infrastructureLayer
+    if (infrastructureLayer.getLayers().length > 0) {
+      infrastructureLayer.addTo(map);
+    }
+
+  } else if (value === 'both') {
+    // Add both
+    addUniversitiesToMap();
+    if (universityLayer.getLayers().length > 0) {
+      universityLayer.addTo(map);
+    }
+
+    addInfrastructureToMap();
+    if (infrastructureLayer.getLayers().length > 0) {
+      infrastructureLayer.addTo(map);
     }
   }
+  // 'none' means do not add any overlay layers
 }
-
-
-// Event listener for the checkbox
-document.getElementById('show-universities').addEventListener('change', updateUniversityLayer);
 
 function addUniversitiesToMap() {
   // Clear any existing markers
@@ -2451,6 +2488,34 @@ function addUniversitiesToMap() {
   universityLayer.addTo(map);
 }
 
+function addInfrastructureToMap() {
+  infrastructureLayer.clearLayers();
+  var selectedSectors = currentSectors;
+
+  infrastructureData.forEach(function(record) {
+    var lat = record.Latitude;
+    var lng = record.Longitude;
+    var sector = record.Sector;
+    var name = record['Name of Business/Science Park'];
+
+    // Only add if sector is selected
+    if (lat && lng && selectedSectors.includes(sector)) {
+      var marker = L.marker([lat, lng], { icon: infrastructureIcon })
+        .bindPopup(`
+          <div class="popup-content">
+            <p><strong>${name}</strong></p>
+            <p><strong>Sector:</strong> ${sector}</p>
+          </div>
+        `);
+      infrastructureLayer.addLayer(marker);
+    }
+  });
+}
+
+function populateInfrastructureLayer(data) {
+  infrastructureData = data; // Just store the data
+}
+
 function getSelectedSectors() {
   return currentSectors; // Replace with your actual variable or logic
 }
@@ -2464,4 +2529,15 @@ var universityIcon = L.icon({
   shadowUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-shadow.png', // Optional
   shadowSize: [35, 35], // Optional
   shadowAnchor: [12, 41] // Optional
+});
+
+// Define a custom icon for infrastructure markers
+var infrastructureIcon = L.icon({
+  iconUrl: 'data/infra_marker_gif.gif', // Path to your PNG file
+  iconSize: [35, 35],    // Adjust based on your image dimensions
+  iconAnchor: [12, 41],  // Adjust as needed
+  popupAnchor: [0, -41], // Adjust as needed
+  shadowUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-shadow.png',
+  shadowSize: [35, 35],
+  shadowAnchor: [12, 41]
 });
