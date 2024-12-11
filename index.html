@@ -63,7 +63,6 @@
     <!-- Map Container -->
     <div id="map">
       <!-- Map content -->
-      <!-- Removed duplicate info-box -->
       <!-- Other controls -->
     </div>
 
@@ -80,11 +79,14 @@
         <!-- Checkboxes will be populated by JavaScript -->
       </div>
 
-      <!-- Show Universities Checkbox (Initially Hidden) -->
-      <div id="universities-option" style="display: none;">
-        <input type="checkbox" id="show-universities">
-        <label for="show-universities">Show Universities</label><br>
-      </div>
+      <!-- Additional Data Dropdown -->
+      <h3>Additional Data</h3>
+      <select id="overlay-select" class="overlay-dropdown">
+        <option value="none">None</option>
+        <option value="universities">Universities</option>
+        <option value="infrastructure">Infrastructure</option>
+        <option value="both">Both</option>
+      </select>
 
       <button id="overall-stats-button">Sector Stats</button>
 
