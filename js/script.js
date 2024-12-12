@@ -1947,7 +1947,7 @@ function cross(o, a, b) {
 function showClusterInfo(clusterInfo) {
   var content = `
     <button id="info-box-close" class="info-box-close">&times;</button>
-    <h3>${clusterInfo.clusterName} (Cluster ${clusterInfo.clusterNumber})</h3>
+    <h3>${props.region} (Cluster ${props.clusterNumber})</h3>
     <p><strong>Sector:</strong> ${clusterInfo.sectorName}</p>
     <p><strong>Company Count:</strong> ${clusterInfo.companyCount}</p>
     <p><strong>Total Employees:</strong> ${clusterInfo.totalEmployees}</p>
@@ -2041,8 +2041,7 @@ function showPolygonInfo(polygonData) {
 
   var content = `
     <button id="info-box-close" class="info-box-close">&times;</button>
-    <h3>Cluster ${props.clusterNumber}</h3>
-    <p><strong>Region:</strong> ${props.region}</p>
+    <h3>${props.region} (Cluster ${props.clusterNumber})</h3>
     <p><strong>Sector:</strong> ${sectorDisplayName}</p>
     <p><strong>Company Count:</strong> ${props.companyCount}</p>
     <p><strong>Total Employees:</strong> ${props.totalEmployees}</p>
@@ -2204,8 +2203,7 @@ function showPolygonInfoPopup(polygonData, latlng) {
 
   var content = `
     <div class="popup-content">
-      <h3>Cluster ${props.clusterNumber}</h3>
-      <p><strong>Region:</strong> ${props.region}</p>
+      <h3>${props.region} (Cluster ${props.clusterNumber})</h3>
       <p><strong>Sector:</strong> ${sectorDisplayName}</p>
       <p><strong>Company Count:</strong> ${props.companyCount}</p>
       <p><strong>Total Employees:</strong> ${props.totalEmployees}</p>
@@ -2252,7 +2250,7 @@ function showPolygonSelectionPopup(polygonsData, latlng) {
     tabLink.setAttribute('data-index', index);
 
     // Only display the cluster number
-    tabLink.textContent = `Cluster ${props.clusterNumber}`;
+    tabLink.textContent = `Cluster ${props.clusterNumber} (${sectorDisplayName})`;
 
     // Apply the sector color as the background color
     tabLink.style.backgroundColor = sectorColor;
@@ -2282,7 +2280,6 @@ function showPolygonSelectionPopup(polygonsData, latlng) {
 
     // Populate tab content with polygon information
     tabContent.innerHTML = `
-      <p><strong>Region:</strong> ${props.region}</p>
       <p><strong>Sector:</strong> ${sectorDisplayName}</p>
       <p><strong>Company Count:</strong> ${props.companyCount}</p>
       <p><strong>Total Employees:</strong> ${props.totalEmployees}</p>
