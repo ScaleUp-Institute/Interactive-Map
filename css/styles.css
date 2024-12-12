@@ -292,6 +292,8 @@ button:hover {
 
 .tab-links li {
   margin: 0;
+  flex: 1; /* This makes each tab take equal space */
+  text-align: center; /* Centers the tab text */
 }
 
 .tab-links li a {
