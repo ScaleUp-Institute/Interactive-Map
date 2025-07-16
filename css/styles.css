@@ -7,33 +7,23 @@ body {
   color: #333;
 }
 
-/* Map and Container Styles */
+html, body {
+  height: 100%;
+  margin: 0;
+  padding: 0;
+}
+
 .map-container {
+  position: relative;
   display: flex;
   flex-direction: row;
   height: 100vh;
   width: 100%;
 }
 
-.left-frame {
-  display: flex;
-  flex-direction: column;
-  width: 20%; /* Changed from fixed width to percentage */
-  min-width: 200px; /* Optional: Set a minimum width */
-  background-color: #f9f9f9;
-  padding: 15px;
-  border-right: 1px solid #ccc;
-  box-sizing: border-box;
-}
-
-.left-content {
-  flex-grow: 1;
-  overflow-y: auto;
-}
-
 .right-frame {
-  width: 25%; /* Changed from fixed width to percentage */
-  min-width: 250px; /* Optional: Set a minimum width */
+  width: 25%;
+  min-width: 250px;
   background-color: #f9f9f9;
   padding: 15px;
   border-left: 1px solid #ccc;
@@ -42,8 +32,112 @@ body {
 }
 
 #map {
-  flex-grow: 1; /* Takes up remaining space */
+  flex-grow: 1;
   height: 100%;
+  background: #fff; /* or 'transparent' if you prefer a see-through PNG */
+}
+
+/* Accordion for Layer Selection */
+.accordion {
+  margin-bottom: 15px;
+  background-color: #fff;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+}
+
+.accordion-toggle {
+  width: 100%;
+  background: #f0f0f0;
+  padding: 10px;
+  text-align: left;
+  border: none;
+  outline: none;
+  cursor: pointer;
+}
+
+.accordion-content label {
+  display: block;
+  margin-bottom: 5px;
+}
+
+/* Sector Stats Panel (slides from the left) */
+#sector-stats-panel {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 320px;  /* match the transformX in controls-shift-right */
+  height: 100%;
+  background-color: #fafafa;
+  box-shadow: 2px 0 6px rgba(0,0,0,0.2);
+  overflow-y: auto;
+  transform: translateX(-100%);
+  transition: transform 0.3s ease;
+  z-index: 3000;
+  pointer-events: auto; /* clickable, even though parent is pointer-events none */
+}
+
+#sector-stats-panel.show {
+  transform: translateX(0);
+}
+
+/* Positioning for Leaflet controls */
+.leaflet-top.leaflet-left {
+  position: absolute;
+  top: 10px;
+  left: 10px;
+  z-index: 5000;
+  /* transitions handled by .leaflet-left rules */
+}
+
+.leaflet-top.leaflet-right {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  z-index: 5000;
+}
+
+/* Shift all left-side controls (zoom, layers, legend) 320px to the right when panel is open */
+.leaflet-left.controls-shift-right {
+  transform: translateX(320px);
+  transition: transform 0.3s ease;
+}
+
+/* Ensure they revert smoothly when the class is removed */
+.leaflet-left {
+  transition: transform 0.3s ease;
+}
+
+/* Stats Panel Header */
+#sector-stats-panel .stats-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 10px;
+}
+#sector-stats-panel .stats-header h2 {
+  margin: 0;
+  font-size: 1rem;
+}
+#sector-stats-panel .close-panel-btn {
+  background: none;
+  border: none;
+  font-size: 1.2rem;
+  cursor: pointer;
+  color: #000;
+}
+
+/* Stats Card */
+.stats-card {
+  background-color: #fff;
+  border: 1px solid #ddd;
+  border-radius: 6px;
+  margin-bottom: 10px;
+  padding: 10px;
+  box-shadow: 0 1px 4px rgba(0,0,0,0.1);
+}
+.stats-card h3 {
+  margin: 0 0 8px;
+  font-size: 1rem;
 }
 
 /* Dropdown Styles */
@@ -66,9 +160,8 @@ body {
   border-radius: 4px;
   cursor: pointer;
   margin-top: 10px;
-  display: none; /* Hidden by default */
+  display: none;
 }
-
 #overall-stats-button:hover {
   background-color: #155d8b;
 }
@@ -80,24 +173,20 @@ body {
   border-radius: 5px;
   max-width: 300px;
 }
-
 .info.legend .legend-header {
   display: flex;
   justify-content: space-between;
   align-items: center;
 }
-
 .info.legend .legend-header button {
   background-color: transparent;
   border: none;
   cursor: pointer;
   font-weight: bold;
 }
-
 .info.legend .legend-header button:hover {
   color: #555;
 }
-
 .info.legend i {
   width: 18px;
   height: 18px;
@@ -111,15 +200,13 @@ body {
   background: white;
   padding: 10px;
   border: 1px solid #ccc;
-  max-width: 100%; /* Ensure it doesn't exceed the parent width */
+  max-width: 100%;
   overflow: auto;
-  margin-top: auto; /* Pushes the info box to the bottom */
+  margin-top: auto;
 }
-
 .info-box.hidden {
   display: none;
 }
-
 .info-box-close {
   float: right;
   background: transparent;
@@ -128,78 +215,69 @@ body {
   cursor: pointer;
 }
 
-/* Styles for the checkboxes container */
+/* Checkboxes Container (if still used) */
 .checkboxes-container {
   border: 1px solid #ccc;
   border-radius: 4px;
   padding: 10px;
-  max-height: 200px; /* Adjust as needed */
+  max-height: 200px;
   overflow-y: auto;
   background-color: #fff;
   margin-bottom: 15px;
 }
-
-/* Style for individual checkboxes */
 .checkboxes-container label {
   display: block;
   margin-bottom: 5px;
   cursor: pointer;
 }
-
 .checkboxes-container input[type="checkbox"] {
   margin-right: 5px;
 }
 
-/* Adjust the height for clusters container if needed */
+/* Cluster Container Height */
 #cluster-checkboxes {
-  max-height: 250px; /* Adjust as needed */
+  max-height: 250px;
 }
 
 /* Hide cluster selection initially */
 #cluster-section {
-  display: none; /* Hidden by default */
+  display: none;
 }
 
 /* Responsive Adjustments */
 @media (max-width: 1200px) {
   .left-frame, .right-frame {
-    width: 25%; /* Adjust as needed */
+    width: 25%;
   }
 }
-
 @media (max-width: 992px) {
   .left-frame, .right-frame {
-    width: 30%; /* Adjust as needed */
+    width: 30%;
   }
 }
-
 @media (max-width: 768px) {
   .map-container {
     flex-direction: column;
-    height: 100vh; /* Ensure it takes up the full viewport height */
+    height: 100vh;
   }
-
   .left-frame, .right-frame {
-    display: none; /* Hide side frames on small screens */
+    display: none;
   }
-
   #map {
     flex-grow: 1;
-    height: 100%; /* Map takes the full available height */
+    height: 100%;
   }
 }
-
 
 /* Layer Selection Styles */
 .left-frame h3, .right-frame h3 {
   margin-top: 0;
 }
-
 .left-frame label {
   margin-left: 5px;
 }
 
-/* Button styling */
+/* Base Button styling */
 button {
   background-color: #007BFF;
   color: #fff;
@@ -209,11 +287,11 @@ button {
   cursor: pointer;
   font-size: 14px;
 }
-
 button:hover {
   background-color: #0056b3;
 }
 
+/* Polygon Toggle Control */
 .polygon-toggle-control {
   background-color: rgba(255, 255, 255, 0.9);
   padding: 10px;
@@ -222,66 +300,54 @@ button:hover {
   font-size: 14px;
   box-shadow: 0 0 15px rgba(0,0,0,0.2);
 }
-
 .polygon-toggle-control label {
   display: block;
   margin-bottom: 5px;
   font-weight: bold;
 }
-
 .polygon-toggle-control select {
   width: 100%;
   padding: 5px;
 }
 
+/* Watermark */
 #watermark {
   position: absolute;
   bottom: 10px;
   right: 10px;
-  width: 100px; /* Adjust size as needed */
-  opacity: 0.7;  /* Optional: Adjust opacity */
-  pointer-events: none; /* Ensures the watermark does not interfere with map interactions */
+  width: 100px;
+  opacity: 0.7;
+  pointer-events: none;
 }
 
-.popup-content {
-  max-height: 200px;
-  overflow-y: auto;
-}
-
-.popup-content h3 {
-  margin-top: 0;
-}
-
-.popup-content ul {
-  list-style: none;
-  padding: 0;
-}
-
-.popup-content li {
-  margin: 5px 0;
-}
-
-.popup-content a {
-  text-decoration: none;
-  color: #007bff;
-}
-
-.popup-content a:hover {
-  text-decoration: underline;
-}
-
-/* Popup content */
+/* Popup and Tab Content */
 .popup-content {
   max-height: 300px;
   overflow-y: auto;
 }
+.popup-content h3 {
+  margin-top: 0;
+}
+.popup-content ul {
+  list-style: none;
+  padding: 0;
+}
+.popup-content li {
+  margin: 5px 0;
+}
+.popup-content a {
+  text-decoration: none;
+  color: #007bff;
+}
+.popup-content a:hover {
+  text-decoration: underline;
+}
 
-/* Tabs container */
+/* Tabs Container */
 .tabs-container {
   width: 100%;
 }
-
-/* Tab links */
+/* Tab Links */
 .tab-links {
   list-style: none;
   padding: 0;
@@ -289,94 +355,190 @@ button:hover {
   display: flex;
   border-bottom: 1px solid #ccc;
 }
-
 .tab-links li {
   margin: 0;
-  flex: 1; /* This makes each tab take equal space */
-  text-align: center; /* Centers the tab text */
+  flex: 1;
+  text-align: center;
 }
-
 .tab-links li a {
   display: block;
   padding: 5px 10px;
-  background: transparent; /* Remove background since we set it dynamically */
-  color: inherit; /* Use inherited color */
+  background: transparent;
+  color: inherit;
   text-decoration: none;
   border: 1px solid #ccc;
   border-bottom: none;
 }
-
 .tab-links li.active a {
   border-bottom: 1px solid #fff;
 }
-
 .tab-links li a:hover {
-  opacity: 0.8; /* Slight opacity change on hover */
+  opacity: 0.8;
 }
-
-/* Tab content */
+/* Tab Content */
 .tab-content .tab {
   display: none;
 }
-
 .tab-content .tab.active {
   display: block;
 }
-
 .tab-content p {
   margin: 5px 0;
 }
 
+/* Polygon Info */
 #polygon-info {
-  /* Adjust as needed to fit within your right margin */
   max-height: 400px;
   overflow-y: auto;
-  /* Additional styling */
   padding: 10px;
   border: 1px solid #ccc;
   background-color: #fff;
   margin-top: 10px;
 }
 
-/* Hide the container by default */
-.hidden {
+/* Leaflet Control Attribution Fade */
+.leaflet-control-attribution {
+  opacity: 0;
+  transition: opacity 0.3s ease;
+}
+.leaflet-control-attribution:hover {
+  opacity: 1;
+}
+
+/* The right column is your .right-frame */
+.right-frame {
+  position: relative; /* ensures children can be absolutely placed */
+}
+
+/* The overall container for the display mode tab */
+.display-mode-tab {
+  position: absolute;
+  top: 10px;               /* tweak if needed */
+  left: 0;                 /* anchored to the left edge of the .right-frame */
+  width: 200px;            /* total width of the expanded content */
+  transform: translateX(-160px); 
+  transition: transform 0.3s ease;
+  z-index: 999;           /* ensure it's above the .right-frame background if needed */
+}
+
+/* Hide entirely if no sectors selected (JS toggles .hidden) */
+.display-mode-tab.hidden {
   display: none;
 }
 
-html, body {
-  height: 100%;
-  margin: 0;
-  padding: 0;
+/* The clickable toggle "Display Mode" strip */
+.display-mode-toggle {
+  background: #f0f0f0;
+  border: 1px solid #ccc;
+  border-radius: 4px 0 0 4px;
+  width: 40px; 
+  padding: 8px;
+  text-align: center;
+  cursor: pointer;
+  font-size: 12px;
+  white-space: nowrap;
 }
 
-.map-container {
-  height: 100%;
-}
-
-#map {
-  flex-grow: 1;
-  height: 100%;
-}
-
-/* Base Map Control Styles */
-.base-map-control {
+/* The sliding content box */
+.display-mode-content {
   background: #fff;
-  padding: 5px;
+  border: 1px solid #ccc;
+  border-radius: 4px 0 0 4px;
+  margin-top: 5px; /* small gap under the toggle if you like */
+  padding: 8px;
+  width: 160px;  /* the visible portion of the interior content */
 }
 
-.base-map-control .base-map-button {
-  display: block;
-  padding: 5px;
-  text-decoration: none;
-  color: #000;
+/* Hide the content by default if .hidden is set */
+.display-mode-content.hidden {
+  display: none;
 }
 
-.base-map-control .base-map-button:hover {
-  background: #e9e9e9;
+/* When "open" is set, we slide in fully (0 -> no negative transform) */
+.display-mode-tab.open {
+  transform: translateX(0);
 }
 
-.base-map-control select {
-  width: 100%;
-  padding: 5px;
-  font-size: 14px;
+/* Container for the Display Mode Box inside the right panel */
+#display-mode-container {
+  position: relative;
+  margin-bottom: 15px;
+}
+
+/* The Display Mode Box that slides in/out */
+#display-mode-box {
+  position: absolute;
+  top: 50px; /* Align with the toggle bubble */
+  right: 0; 
+  width: 200px;
+  background-color: #fff;
+  border: 1px solid #ccc;
+  padding: 10px;
+  transition: transform 0.3s ease;
+  transform: translateX(100%);  /* Start off-screen (hidden) */
+  z-index: 9998;
+}
+#display-mode-box.show {
+  transform: translateX(0);
+}
+
+#display-mode-toggle {
+  position: absolute;
+  top: 50px; /* Adjust vertically as needed */
+  right: calc(25% + 10px); /* Assumes right-frame occupies 25% of width */
+  z-index: 9999;
+  background-color: #007BFF;
+  color: #fff;
+  width: 40px;
+  height: 40px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  cursor: pointer;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.3);
+}
+
+/* ───────────  Material-3 “chip / pill” style  ─────────── */
+.chips-container {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  padding: 6px 0;
+  /* kill the old checkbox box-look */
+  border: none;
+  max-height: 250px;          /* keep your existing scroll box height */
+  overflow-y: auto;
+}
+
+.sector-chip {
+  display: inline-flex;
+  align-items: center;
+  padding: 6px 14px;
+  font: 500 14px/1.2 "Roboto", "Open Sans", sans-serif;
+  border-radius: 22px;        /* MD-3 suggests 20–24px */
+  border: 1px solid #d0d7de;
+  background: #fff;
+  color: #202124;
+  cursor: pointer;
+  user-select: none;
+  transition:
+    background-color 0.15s ease,
+    color            0.15s ease,
+    border-color     0.15s ease;
+}
+
+.sector-chip.selected {
+  background: rgba(26,115,232,0.12);   /* soft blue */
+  border-color: #1a73e8;
+  color: #1a73e8;                      /* Google-blue text */
+}
+
+.sector-chip:active {
+  transform: scale(0.97);
+}
+
+/* optional hover hint */
+.sector-chip:not(.selected):hover {
+  background: rgba(0,0,0,0.04);
 }
