@@ -1,0 +1,123 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>West Midlands & Surrounding Areas Cut‑out</title>
+  <style>
+    body { font-family: sans-serif; margin: 20px; }
+    #myCanvas { border: 1px solid #ccc; display: block; margin-top: 10px; }
+    #status { color: green; font-size: .9em; }
+  </style>
+</head>
+<body>
+  <h1>West Midlands &amp; Surrounding Areas</h1>
+  <button id="render-btn">Render Map</button>
+  <button id="download-btn" disabled>Download PNG</button>
+  <div id="status"></div>
+
+  <canvas id="myCanvas" width="2048" height="2048"></canvas>
+
+  <script>
+  /* ========== CONFIG ========== */
+  const GEOFILE   = "final_areas_2025_fixed (1).geojson";
+  const AREA_PROP = "Final area";
+
+  // Areas to include + subtle blue palette
+  const TARGETS = [
+    {name: "WEST MIDLANDS",                           color: "#1E3A8A"}, // darkest
+    {name: "THE MARCHES",                              color: "#274EB1"},
+    {name: "STOKE-ON-TRENT AND STAFFORDSHIRE",        color: "#3364D8"},
+    {name: "WARWICKSHIRE",                            color: "#3F7CF4"},
+    {name: "WORCESTERSHIRE",                          color: "#6395F9"}  // lightest
+  ];
+  const TARGET_MAP = new Map(TARGETS.map(t => [t.name, t.color]));
+
+  /* ========== DOM HOOKS ========== */
+  const canvas  = document.getElementById('myCanvas');
+  const ctx     = canvas.getContext('2d');
+  document.getElementById('render-btn').onclick   = renderMap;
+  document.getElementById('download-btn').onclick = downloadPng;
+
+  // Kick off automatically
+  window.onload = renderMap;
+
+  /* ========== MAIN RENDER ========== */
+  async function renderMap(){
+    setStatus('Loading…');
+    try {
+      const geoJSON = await (await fetch(GEOFILE)).json();
+      const selected = geoJSON.features.filter(f => {
+        const area = String(f.properties[AREA_PROP]).toUpperCase();
+        return TARGET_MAP.has(area);
+      });
+      if(!selected.length){ setStatus('Requested areas not found'); return; }
+
+      // 1️⃣ Compute combined bounding box
+      let minLat =  1e9, maxLat = -1e9,
+          minLng =  1e9, maxLng = -1e9;
+      selected.forEach(feat => {
+        const polys = (feat.geometry.type === 'Polygon')
+          ? [feat.geometry.coordinates]
+          : feat.geometry.coordinates; // MultiPolygon
+        polys.forEach(rings => rings[0].forEach(([lng,lat]) => {
+          minLat = Math.min(minLat, lat); maxLat = Math.max(maxLat, lat);
+          minLng = Math.min(minLng, lng); maxLng = Math.max(maxLng, lng);
+        }));
+      });
+      // padding for nicer frame
+      const pad  = 0.05;
+      const latR = maxLat - minLat;
+      const lngR = maxLng - minLng;
+      minLat -= latR * pad; maxLat += latR * pad;
+      minLng -= lngR * pad; maxLng += lngR * pad;
+
+      const project = (lat,lng) => [
+        (lng - minLng) / (maxLng - minLng) * canvas.width,
+        canvas.height - (lat - minLat) / (maxLat - minLat) * canvas.height
+      ];
+
+      // 2️⃣ Paint
+      ctx.clearRect(0,0,canvas.width,canvas.height);
+      ctx.lineWidth   = 2;
+      ctx.strokeStyle = '#000';
+
+      selected.forEach(feat => {
+        const area  = String(feat.properties[AREA_PROP]).toUpperCase();
+        const fill  = TARGET_MAP.get(area);
+        const polys = (feat.geometry.type === 'Polygon')
+          ? [feat.geometry.coordinates]
+          : feat.geometry.coordinates; // MultiPolygon
+
+        ctx.fillStyle = fill;
+        polys.forEach(rings => {
+          ctx.beginPath();
+          rings[0].forEach(([lng,lat],i) => {
+            const [x,y] = project(lat,lng);
+            (i ? ctx.lineTo(x,y) : ctx.moveTo(x,y));
+          });
+          ctx.closePath();
+          ctx.fill();
+          ctx.stroke();
+        });
+      });
+
+      // Done!
+      document.getElementById('download-btn').disabled = false;
+      setStatus('Done.');
+    } catch(err){
+      console.error(err);
+      setStatus('Error: '+err);
+    }
+  }
+
+  /* ========== UTILITIES ========== */
+  function downloadPng(){
+    const link   = document.createElement('a');
+    link.download = 'west_midlands_surroundings.png';
+    link.href     = canvas.toDataURL('image/png');
+    link.click();
+  }
+  function setStatus(txt){ document.getElementById('status').textContent = txt; }
+  </script>
+</body>
+</html>

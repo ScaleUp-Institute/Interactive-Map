@@ -1,100 +1,97 @@
-Name of Business/Science Park,Latitude,Longitude,Sector
-"Advanced Manufacturing Research Centre (AMRC), Sheffield",53.3668,-1.4711,Advanced Manufacturing
-"Manufacturing Technology Centre (MTC), Coventry",52.409,-1.5162,Advanced Manufacturing
-"Sci-Tech Daresbury, Cheshire",53.3713,-2.5771,Advanced Manufacturing
-"The Oxford Science Park, Oxford",51.7404,-1.2241,Advanced Manufacturing
-"Cambridge Science Park, Cambridge",52.2053,0.1334,Advanced Manufacturing
-"Manchester Science Park, Manchester",53.4658,-2.226,Advanced Manufacturing
-"Innovation Birmingham, Birmingham",52.4862,-1.895,Advanced Manufacturing
-"The Hive, Worcester",52.192,-2.2212,Advanced Manufacturing
-"Advanced Manufacturing Park, Rotherham",53.4138,-1.3775,Advanced Manufacturing
-"Digital Institute, London",51.4966,-0.1569,Advanced Manufacturing
-"Harwell Science and Innovation Campus, Oxfordshire",51.5794,-1.3092,Advanced Manufacturing
-Silverstone Technology Cluster,52.07609959,-1.02504086,Advanced Manufacturing
-National Manufacturing Institute Scotland (NMIS),55.87380963,-4.417768569,Advanced Manufacturing
-"Advanced Manufacturing Research Centre (AMRC), Sheffield",53.3668,-1.4711,Advanced Manufacturing
-"Manufacturing Technology Centre (MTC), Coventry",52.409,-1.5162,Advanced Manufacturing
-"National Composites Centre (NCC), Bristol",51.426,-2.562,Advanced Manufacturing
-"Centre for Process Innovation (CPI), Sedgefield",54.6288,-1.5761,Advanced Manufacturing
-"The UK Battery Industrialisation Centre (UKBIC), Coventry",52.4066,-1.5076,Advanced Manufacturing
-"High Value Manufacturing Catapult (HVMC), London",51.5085,-0.1257,Advanced Manufacturing
-Agri-Tech East,52.6298,1.2974,Agritech
-NIAB (National Institute of Agricultural Botany),52.2106,0.0956,Agritech
-Rothamsted Research,51.8095,-0.3585,Agritech
-Agri-EPI Centre,52.2043,-0.7594,Agritech
-Crop Health and Protection (CHAP),53.3665,-1.4876,Agritech
-Lincoln Science & Innovation Park,53.2307,-0.5504,Agritech
-Earlham Institute,52.6203,1.2199,Agritech
-James Hutton Institute,56.4607,-2.9806,Agritech
-Norwich Research Park,52.6225,1.2237,Agritech
-Aberystwyth Innovation and Enterprise Campus,52.4157,-4.0637,Agritech
-UK Agri-Tech Centre,52.77769453,-2.424527331,Agritech
-Agri-EPI Centre Midlands Agri-Tech Innovation Hub,52.77769453,-2.424527331,Agritech
-Shinfield Studios,51.41550294,-0.9386759783,Creative
-Pinewood Studios,51.54890716,-0.5319291412,Creative
-National Film & Television School,51.60537917,-0.6372275691,Creative
-Creative Central NCL,,,Creative
-MediaCityUK,53.47282288,-2.298779453,Creative
-Cambridge Science Park,52.2237,0.15,Net Zero
-Oxford Science Park,51.7141,-1.2337,Net Zero
-Harwell Science and Innovation Campus,51.5794,-1.3092,Net Zero
-London Sustainable Industries Park,51.518,0.1304,Net Zero
-Bristol and Bath Science Park,51.5023,-2.5135,Net Zero
-Aberdeen Energy Park,57.1844,-2.0943,Net Zero
-Sci-Tech Daresbury,53.3481,-2.6795,Net Zero
-Heriot-Watt University Research Park,55.9101,-3.3244,Net Zero
-Nottingham CleanTech Centre,52.9548,-1.1502,Net Zero
-Tyseley Energy Park,52.4648,-1.8526,Net Zero
-University of Warwick Science Park,52.3841,-1.5605,Net Zero
-Manchester Science Park,53.4647,-2.2353,Net Zero
-Edinburgh Technopole,55.8763,-3.1763,Net Zero
-Southampton Science Park,50.973,-1.4563,Net Zero
-Glasgow Innovation District,55.858,-4.2595,Net Zero
-Coventry and Warwickshire Green Business Programme,52.4058,-1.5127,Net Zero
-Energy Park Fife,56.1939,-3.0167,Net Zero
-Orkney Research and Innovation Campus,58.977,-2.9563,Net Zero
-Energy Systems Catapult,52.4781,-1.912,Net Zero
-Offshore Renewable Energy (ORE) Catapult,55.01,-1.448,Net Zero
-High Value Manufacturing (HVM) Catapult,52.4677,-1.9278,Net Zero
-Connected Places Catapult,51.5132,-0.1181,Net Zero
-Digital Catapult,51.5353,-0.098,Net Zero
-Satellite Applications Catapult,51.606,-1.2408,Net Zero
-Offshore Renewable Energy (ORE) Catapult – Glasgow,55.8609,-4.2514,Net Zero
-Nuclear Advanced Manufacturing Research Centre (Nuclear AMRC),53.3866,-1.416,Net Zero
-Cell and Gene Therapy Catapult,51.4046,-0.3063,Net Zero
-Compound Semiconductor Applications Catapult,51.4844,-3.1678,Net Zero
-Future Cities Catapult (part of Connected Places Catapult),51.523,-0.0866,Net Zero
-Centre for Process Innovation (CPI) (part of HVM Catapult),54.5894,-1.179,Net Zero
-National Composites Centre (NCC) (part of HVM Catapult),51.4238,-2.5552,Net Zero
-Advanced Propulsion Centre (APC),52.5125,-1.4638,Net Zero
-Net Zero Teesside,54.5742,-1.2348,Net Zero
-HyNet North West,53.4001,-2.9779,Net Zero
-Hydrogen South West,51.44,-2.581,Net Zero
-Zero Carbon Humber,53.742,-0.3367,Net Zero
-South Wales Industrial Cluster (SWIC),51.4816,-3.1791,Net Zero
-East Coast Cluster,54.5736,-1.2343,Net Zero
-Midlands Engine Hydrogen Strategy,52.4862,-1.8904,Net Zero
-Scottish Hydrogen and Fuel Cell Association (SHFCA),55.9533,-3.1883,Net Zero
-North East Energy Catalyst,54.9784,-1.6174,Net Zero
-Hydrogen East,52.6309,1.2974,Net Zero
-Net Zero Technology Centre,57.1437,-2.093,Net Zero
-Canary Wharf,51.5054,-0.0235,Professional Services
-The City of London,51.5155,-0.0922,Professional Services
-London Tech City (Silicon Roundabout),51.5255,-0.0871,Professional Services
-Edinburgh Financial District,55.9525,-3.202,Professional Services
-Belfast Harbour,54.6051,-5.9209,Professional Services
-"Brindleyplace, Birmingham",52.4785,-1.9125,Professional Services
-"Spinningfields, Manchester",53.4782,-2.2525,Professional Services
-International Quarter London (IQL),51.5415,-0.0057,Professional Services
-Leeds Digital Hub,53.8008,-1.5491,Professional Services
-Glasgow International Financial Services District (IFSD),55.858,-4.259,Professional Services
-"5G/6G Innovation Centre, University of Surrey",51.2425,-0.5905,Telecoms Technology
-Adastral Park,52.0588,1.2335,Telecoms Technology
-Digital Catapult,51.5185,-0.1283,Telecoms Technology
-Cambridge Wireless,52.209,0.0931,Telecoms Technology
-Silicon Roundabout,51.5255,-0.0871,Telecoms Technology
-Bristol and Bath Science Park,51.486,-2.474,Telecoms Technology
-"Technium OpTIC, North Wales",53.2591,-3.4314,Telecoms Technology
-Innovation Birmingham Campus,52.4895,-1.904,Telecoms Technology
-Harwell Science and Innovation Campus,51.5756,-1.3092,Telecoms Technology
-"MediaCityUK, Manchester",53.4744,-2.2977,Telecoms Technology
+Name of Business/Science Park,Latitude,Longitude,Sector,Website,Postcode
+"Advanced Manufacturing Research Centre (AMRC), Sheffield",53.3668,-1.4711,Advanced Manufacturing,https://www.amrc.co.uk/,S2 4UE
+"Manufacturing Technology Centre (MTC), Coventry",52.409,-1.5162,Advanced Manufacturing,https://www.the-mtc.org/,CV1 4AX
+"Sci-Tech Daresbury, Cheshire",53.3713,-2.5771,Advanced Manufacturing,https://sci-techdaresbury.com/,WA4 2AN
+"The Oxford Science Park, Oxford",51.7404,-1.2241,Advanced Manufacturing,https://www.oxfordsp.com/,OX4 2DW
+"Cambridge Science Park, Cambridge",52.2053,0.1334,Advanced Manufacturing,https://www.cambridgesciencepark.co.uk/,CB1 1DJ
+"Manchester Science Park, Manchester",53.4658,-2.226,Advanced Manufacturing,https://mspl.co.uk/,M13 9AU
+"Innovation Birmingham, Birmingham",52.4862,-1.895,Advanced Manufacturing,https://www.bruntwood.co.uk/our-locations/birmingham/innovation-birmingham/,B4 6JU
+"The Hive, Worcester",52.192,-2.2212,Advanced Manufacturing,https://www.thehiveworcester.org/,WR1 2ET
+"Advanced Manufacturing Park, Rotherham",53.4138,-1.3775,Advanced Manufacturing,https://www.amptechnologycentre.co.uk/,S10 5NA
+"Digital Institute, London",51.4966,-0.1569,Advanced Manufacturing,https://www.staffs.ac.uk/london,SW1X 9DX
+"Harwell Science and Innovation Campus, Oxfordshire",51.5794,-1.3092,Advanced Manufacturing,https://www.harwellcampus.com/,OX11 0RA
+Silverstone Technology Cluster,52.07609959,-1.02504086,Advanced Manufacturing,https://www.silverstonetechnologycluster.com/,OX17 3EW
+National Manufacturing Institute Scotland (NMIS),55.87380963,-4.417768569,Advanced Manufacturing,https://www.nmis.scot/,PA3 2EF
+"National Composites Centre (NCC), Bristol",51.426,-2.562,Advanced Manufacturing,https://www.nccuk.com/,BS14 9EA
+"Centre for Process Innovation (CPI), Sedgefield",54.6288,-1.5761,Advanced Manufacturing,https://www.uk-cpi.com/,DL5 4QE
+"The UK Battery Industrialisation Centre (UKBIC), Coventry",52.4066,-1.5076,Advanced Manufacturing,https://www.ukbic.co.uk/,CV1 5RR
+"High Value Manufacturing Catapult (HVMC), London",51.5085,-0.1257,Advanced Manufacturing,https://hvm.catapult.org.uk/,WC2R 0QU
+Agri-Tech East,52.6298,1.2974,Agritech,https://www.agri-tech-e.co.uk/,NR2 4SF
+NIAB (National Institute of Agricultural Botany),52.2106,0.0956,Agritech,https://www.niab.com/,CB3 0UT
+Rothamsted Research,51.8095,-0.3585,Agritech,https://www.rothamsted.ac.uk/,AL5 2JH
+Agri-EPI Centre,52.2043,-0.7594,Agritech,https://agri-epicentre.com/,MK40 1PW
+Crop Health and Protection (CHAP),53.3665,-1.4876,Agritech,https://chap-solutions.co.uk/,S7 1ND
+Lincoln Science & Innovation Park,53.2307,-0.5504,Agritech,https://www.lincolnsciencepark.co.uk/,LN1 1TQ
+Earlham Institute,52.6203,1.2199,Agritech,https://www.earlham.ac.uk/,NR4 7UP
+James Hutton Institute,56.4607,-2.9806,Agritech,https://www.hutton.ac.uk/,DD1 5DL
+Norwich Research Park,52.6225,1.2237,Agritech,https://www.norwichresearchpark.com/,NR4 7TJ
+Aberystwyth Innovation and Enterprise Campus,52.4157,-4.0637,Agritech,https://www.aberinnovation.com/,SY23 3DZ
+UK Agri-Tech Centre,52.77769453,-2.424527331,Agritech,https://ukagritechcentre.com/,TF10 8HY
+Agri-EPI Centre Midlands Agri-Tech Innovation Hub,52.77769453,-2.424527331,Agritech,https://www.agri-epicentre.com/,TF10 8HY
+Shinfield Studios,51.41550294,-0.938675978,Creative,https://www.shinfieldstudios.com/,RG1 5HU
+Pinewood Studios,51.54890716,-0.531929141,Creative,https://pinewoodgroup.com/,HA4 8NW
+National Film & Television School,51.60537917,-0.637227569,Creative,https://nfts.co.uk/,HP9 1GY
+MediaCityUK,53.47282288,-2.298779453,Creative,https://www.mediacityuk.co.uk/,M50 2LH
+Cambridge Science Park,52.2237,0.15,Net Zero,https://www.cambridgesciencepark.co.uk/,CB4 1TJ
+Oxford Science Park,51.7141,-1.2337,Net Zero,https://oxfordsp.com/,OX2 9TD
+Harwell Science and Innovation Campus,51.5794,-1.3092,Net Zero,https://www.harwellcampus.com/,OX11 0RA
+London Sustainable Industries Park,51.518,0.1304,Net Zero,https://www.londonsip.com/,E16 1FR
+Bristol and Bath Science Park,51.5023,-2.5135,Net Zero,https://www.bbsp.co.uk/,BS13 7TJ
+Aberdeen Energy Park,57.1844,-2.0943,Net Zero,https://www.aberdeenenergypark.co.uk/,AB23 8PN
+Sci-Tech Daresbury,53.3481,-2.6795,Net Zero,https://sci-techdaresbury.com/,WA5 1QW
+Heriot-Watt University Research Park,55.9101,-3.3244,Net Zero,https://www.hw.ac.uk/uk/business/heriot-watt-university-research-park.htm,EH4 7AR
+Nottingham CleanTech Centre,52.9548,-1.1502,Net Zero,https://www.cleantechcentre.co.uk/,NG1 2BT
+Tyseley Energy Park,52.4648,-1.8526,Net Zero,https://www.tyseleyenergy.co.uk/,B12 0HU
+University of Warwick Science Park,52.3841,-1.5605,Net Zero,https://www.warwicksciencepark.co.uk/,CV3 4FJ
+Manchester Science Park,53.4647,-2.2353,Net Zero,https://mspl.co.uk/,M13 9PP
+Edinburgh Technopole,55.8763,-3.1763,Net Zero,https://www.edinburghtechnopole.co.uk/,EH20 9PH
+Southampton Science Park,50.973,-1.4563,Net Zero,https://www.science-park.co.uk/,SO52 9AX
+Glasgow Innovation District,55.858,-4.2595,Net Zero,https://www.glasgowcityinnovationdistrict.com/,G1 4PL
+Coventry and Warwickshire Green Business Programme,52.4058,-1.5127,Net Zero,https://www.coventry.gov.uk/greenbusiness,CV1 1LH
+Energy Park Fife,56.1939,-3.0167,Net Zero,https://www.investfife.co.uk/energy-park-fife/,KY7 6SX
+Orkney Research and Innovation Campus,58.977,-2.9563,Net Zero,https://www.orkney.com/listings/orkney-research-and-innovation-campus,KW15 1PZ
+Energy Systems Catapult,52.4781,-1.912,Net Zero,https://es.catapult.org.uk/,B1 2HL
+Offshore Renewable Energy (ORE) Catapult,55.01,-1.448,Net Zero,https://ore.catapult.org.uk/,NE29 0AG
+High Value Manufacturing (HVM) Catapult,52.4677,-1.9278,Net Zero,https://hvm.catapult.org.uk/,B15 3HD
+Connected Places Catapult,51.5132,-0.1181,Net Zero,https://cp.catapult.org.uk/,WC2B 4BB
+Digital Catapult,51.5353,-0.098,Net Zero,https://www.digicatapult.org.uk/,N1 8NT
+Satellite Applications Catapult,51.606,-1.2408,Net Zero,https://sa.catapult.org.uk/,OX11 8RQ
+Offshore Renewable Energy (ORE) Catapult – Glasgow,55.8609,-4.2514,Net Zero,https://ore.catapult.org.uk/,G1 3BU
+Nuclear Advanced Manufacturing Research Centre (Nuclear AMRC),53.3866,-1.416,Net Zero,https://namrc.co.uk/,S9 3DF
+Cell and Gene Therapy Catapult,51.4046,-0.3063,Net Zero,https://ct.catapult.org.uk/,KT1 2AU
+Compound Semiconductor Applications Catapult,51.4844,-3.1678,Net Zero,https://csa.catapult.org.uk/,CF24 0AA
+Future Cities Catapult (part of Connected Places Catapult),51.523,-0.0866,Net Zero,https://cp.catapult.org.uk/,EC2A 4DE
+Centre for Process Innovation (CPI) (part of HVM Catapult),54.5894,-1.179,Net Zero,https://www.uk-cpi.com/,TS17 6DJ
+National Composites Centre (NCC) (part of HVM Catapult),51.4238,-2.5552,Net Zero,https://www.nccuk.com/,BS14 8BE
+Advanced Propulsion Centre (APC),52.5125,-1.4638,Net Zero,https://www.apcuk.co.uk/,CV11 4LY
+Net Zero Teesside,54.5742,-1.2348,Net Zero,https://www.netzeroteesside.co.uk/,TS1 2PP
+HyNet North West,53.4001,-2.9779,Net Zero,https://hynet.co.uk/,L1 5BB
+Hydrogen South West,51.44,-2.581,Net Zero,https://www.hydrogensouthwest.com/,BS3 5BN
+Zero Carbon Humber,53.742,-0.3367,Net Zero,https://www.zerocarbonhumber.co.uk/,HU1 2LJ
+South Wales Industrial Cluster (SWIC),51.4816,-3.1791,Net Zero,https://www.swic.cymru/,CF10 2AF
+East Coast Cluster,54.5736,-1.2343,Net Zero,https://www.eastcoastcluster.co.uk/,TS1 2AS
+Midlands Engine Hydrogen Strategy,52.4862,-1.8904,Net Zero,https://midlandsengine.org/our-work/hydrogen/,B4 7DL
+Scottish Hydrogen and Fuel Cell Association (SHFCA),55.9533,-3.1883,Net Zero,https://www.shfca.org.uk/,EH1 3EG
+North East Energy Catalyst,54.9784,-1.6174,Net Zero,https://www.northeastenergycatalyst.co.uk/,NE4 9AA
+Hydrogen East,52.6309,1.2974,Net Zero,https://www.hydrogeneast.uk/,NR3 1FH
+Net Zero Technology Centre,57.1437,-2.093,Net Zero,https://www.netzerotc.com/,AB11 5PP
+Canary Wharf,51.5054,-0.0235,Professional Services,https://canarywharf.com/,E14 4AP
+The City of London,51.5155,-0.0922,Professional Services,https://www.cityoflondon.gov.uk/,EC2V 5AE
+London Tech City (Silicon Roundabout),51.5255,-0.0871,Professional Services,https://www.techcityuk.com/,EC1Y 1AX
+Edinburgh Financial District,55.9525,-3.202,Professional Services,https://www.edinburgh.org/invest/financial-services/,EH2 3DF
+Belfast Harbour,54.6051,-5.9209,Professional Services,https://www.belfast-harbour.co.uk/,BT1 3AL
+"Brindleyplace, Birmingham",52.4785,-1.9125,Professional Services,https://www.brindleyplace.com/,B1 2HL
+"Spinningfields, Manchester",53.4782,-2.2525,Professional Services,https://www.spinningfieldsonline.com/,M3 4PP
+International Quarter London (IQL),51.5415,-0.0057,Professional Services,https://www.internationalquarter.london/,E20 1NN
+Leeds Digital Hub,53.8008,-1.5491,Professional Services,https://leeds.tech/workspace/the-digital-hub/,LS1 3ED
+Glasgow International Financial Services District (IFSD),55.858,-4.259,Professional Services,https://www.glasgow.gov.uk/article/4719/International-Financial-Services-District,G1 4PL
+"5G/6G Innovation Centre, University of Surrey",51.2425,-0.5905,Telecoms Technology,https://www.surrey.ac.uk/institute-communication-systems/5g-6g-innovation-centre,GU2 7JQ
+Adastral Park,52.0588,1.2335,Telecoms Technology,https://atadastral.co.uk/,IP5 1JL
+Digital Catapult,51.5185,-0.1283,Telecoms Technology,https://www.digicatapult.org.uk/,WC1B 3QT
+Cambridge Wireless,52.209,0.0931,Telecoms Technology,https://www.cambridgewireless.co.uk/,CB3 0HE
+Silicon Roundabout,51.5255,-0.0871,Telecoms Technology,https://www.siliconroundabout.org.uk/,EC1Y 1AX
+Bristol and Bath Science Park,51.486,-2.474,Telecoms Technology,https://www.bbsp.co.uk/,BS16 7JE
+"Technium OpTIC, North Wales",53.2591,-3.4314,Telecoms Technology,https://www.glyndwrinnovations.co.uk/,LL18 2DD
+Innovation Birmingham Campus,52.4895,-1.904,Telecoms Technology,https://www.bruntwood.co.uk/our-locations/birmingham/innovation-birmingham/,B5 4TD
+Harwell Science and Innovation Campus,51.5756,-1.3092,Telecoms Technology,https://www.harwellcampus.com/,SN7 8SH
+"MediaCityUK, Manchester",53.4744,-2.2977,Telecoms Technology,https://www.mediacityuk.co.uk/,M50 2AP

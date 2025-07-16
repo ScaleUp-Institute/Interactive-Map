@@ -1,0 +1,164 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Top-3 Sector Change Bars (Wider & Shorter)</title>
+  <style>
+    html, body { margin:0; padding:20px; background:none; font-family:sans-serif; }
+    #container { display:flex; flex-direction:column; gap:16px; }
+    .region-block { display:inline-block; }
+    .region-label { font-size:18px; font-weight:bold; color:#fff; margin-bottom:6px; }
+    .download-btn { margin-top:4px; padding:4px 8px; font-size:12px; cursor:pointer; }
+    svg { display:block; }
+    .bar-text { font-weight:bold; pointer-events:none; }
+  </style>
+</head>
+<body>
+  <div id="container"></div>
+  <script src="https://d3js.org/d3.v7.min.js"></script>
+  <script>
+  (async function() {
+    // Load data
+    const data = await d3.csv('2023 propotion change.csv', d => ({
+      region: d.Region,
+      sector: d.Sector_short,
+      pct: +d['Proportion - 2023'],
+      change: +d['Change in proportion']
+    }));
+
+    // Color map - Updated with new Photoshop color codes
+    const sectorColors = {
+      "Accommodation & Food":"#48a2b8","Construction":"#7f7f7f","Admin & Support Services":"#275b9b",
+      "Creative & Arts":"#d62728","Education":"#b4d48a","Finance & Insurance":"#fdc633",
+      "Energy":"#f29493","Health & Social Work":"#a576b2","Info & Communication":"#3d3c3b",
+      "Manufacturing":"#ff4136","Professional, Scientific & Tech":"#2ca02c",
+      "Transport":"#aec7e8","Wholesale & Retail":"#ffbb78","Real Estate":"#e85ab1","Other Service":"#7d4f00"
+    };
+
+    // Alignment sets
+    const leftAlign = new Set(["Scotland","North East","North West","East of England","London","South East"]);
+    const rightAlign = new Set(["Yorkshire and The Humber","East Midlands","Northern Ireland","West Midlands","Wales","South West"]);
+
+    // Group and pick top 3 by change
+    const regions = d3.groups(data, d => d.region)
+      .map(([region, arr]) => ({ region, top3: arr.sort((a,b)=>b.change-a.change).slice(0,3) }));
+
+    // Scales: Further reduced max widths to compress larger values more
+    const maxPct = d3.max(regions, r => d3.max(r.top3, d => d.pct));
+    const maxChange = d3.max(regions, r => d3.max(r.top3, d => d.change));
+    const pctMaxPx = 180;  // FURTHER REDUCED from 250
+    const chgMaxPx = 60;   // FURTHER REDUCED from 80
+    const minPctPx = 60;   // Minimum width for percentage portion
+    const minChgPx = 40;   // Minimum width for change portion
+    
+    const scalePct = d3.scaleLinear().domain([0, maxPct]).range([minPctPx, pctMaxPx]);
+    const scaleChg = d3.scaleLinear().domain([0, maxChange]).range([minChgPx, chgMaxPx]);
+
+    // Layout constants
+    const margin = 12;
+    const padding = 10;
+    const pillH = 60;  // FURTHER INCREASED from 40 (width/height of rectangle)
+    const gap = 4;     // INCREASED gap between rectangles
+    const cornerRadius = 8;  // INCREASED corner radius to match larger size
+    const svgWidth = margin*2 + pctMaxPx + chgMaxPx;
+
+    const container = d3.select('#container');
+
+    regions.forEach((grp, idx) => {
+      const { region, top3 } = grp;
+      const wrapper = container.append('div').attr('class','region-block');
+      wrapper.append('div').attr('class','region-label').text(region);
+
+      const height = top3.length*(pillH+gap)-gap;
+      const svg = wrapper.append('svg')
+        .attr('id', `svg-${idx}`)
+        .attr('width', svgWidth)
+        .attr('height', height)
+        .style('background','none');
+
+      const defs = svg.append('defs');
+
+      top3.forEach((d, i) => {
+        const y = i*(pillH+gap);
+        const wPct = scalePct(d.pct);
+        const wChg = scaleChg(Math.abs(d.change));
+        const totalW = wPct + wChg;
+
+        // Gradient split horizontally
+        const dark = sectorColors[d.sector]||'#666';
+        const light = d3.color(dark).brighter(1.2).formatHex();
+        const gradId = `grad-${idx}-${i}`;
+        const grad = defs.append('linearGradient').attr('id', gradId)
+          .attr('x1','0%').attr('y1','0%').attr('x2','0%').attr('y2','100%');
+        grad.append('stop').attr('offset','50%').attr('stop-color',dark);
+        grad.append('stop').attr('offset','50%').attr('stop-color',light);
+
+        // Bar - with right alignment for certain regions
+        const barX = rightAlign.has(region) ? margin + svgWidth - margin*2 - totalW : margin;
+        
+        svg.append('rect')
+          .attr('x', barX)
+          .attr('y', y)
+          .attr('width', totalW)
+          .attr('height', pillH)
+          .attr('rx', cornerRadius).attr('ry', cornerRadius)
+          .attr('fill', `url(#${gradId})`);
+
+        // Text placement logic - FIXED to stay within rectangle bounds and handle right alignment
+        const minX = barX + padding;
+        const maxX = barX + totalW - padding;
+        
+        let rectX;
+        if(leftAlign.has(region)) {
+          rectX = Math.max(minX, barX + padding);
+        } else if(rightAlign.has(region)) {
+          rectX = Math.min(maxX, barX + totalW - padding);
+        } else {
+          rectX = barX + (totalW/2);
+        }
+        let anchor = leftAlign.has(region)?'start': rightAlign.has(region)?'end':'middle';
+
+        // Proportion (top) - adjusted for larger height and better positioning
+        svg.append('text')
+          .attr('class','bar-text')
+          .attr('x', rectX)
+          .attr('y', y + pillH*0.32)  // Slightly higher in top half
+          .attr('text-anchor', anchor)
+          .attr('font-size','20px')
+          .attr('fill','#fff')
+          .text(d.pct.toFixed(1));
+
+        // Change (bottom) - adjusted to avoid middle line intersection
+        svg.append('text')
+          .attr('class','bar-text')
+          .attr('x', rectX)
+          .attr('y', y + pillH*0.82)  // Moved lower in bottom half
+          .attr('text-anchor', anchor)
+          .attr('font-size','20px')
+          .attr('fill','#000')
+          .text(d.change.toFixed(1));
+      });
+
+      // Download
+      wrapper.append('button')
+        .attr('class','download-btn')
+        .text('Download PNG')
+        .on('click', () => downloadSVG(`svg-${idx}`, `${region.replace(/\s+/g,'_')}_top3.png`));
+    });
+
+    function downloadSVG(id, filename) {
+      const sf=3;
+      const svgEl=document.getElementById(id);
+      const xml=new XMLSerializer().serializeToString(svgEl);
+      const img=new Image(); img.onload=()=>{
+        const c=document.createElement('canvas');
+        c.width=svgEl.width.baseVal.value*sf; c.height=svgEl.height.baseVal.value*sf;
+        const ctx=c.getContext('2d'); ctx.scale(sf,sf); ctx.drawImage(img,0,0);
+        const a=document.createElement('a'); a.download=filename; a.href=c.toDataURL('image/png'); a.click();
+      };
+      img.src='data:image/svg+xml;base64,'+btoa(unescape(encodeURIComponent(xml)));
+    }
+  })();
+  </script>
+</body>
+</html>

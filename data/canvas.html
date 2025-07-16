@@ -1,0 +1,329 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Final-Area Density Map</title>
+  <style>
+    body { font-family: sans-serif; margin: 20px }
+    #myCanvas { border: 1px solid #ccc; display: block; margin-top: 10px }
+    button, label { margin-right: 10px; margin-bottom: 10px }
+    #status { color: green; font-size: .9em }
+  </style>
+</head>
+<body>
+  <h1>Final-Area Map – Scale-up &amp; Pipeline Density</h1>
+
+  <!-- mode toggles -->
+  <label><input type="radio" name="mode" value="scale2023" checked> Scale-up 2023</label>
+  <label><input type="radio" name="mode" value="pipe2023"> Pipeline 2023</label>
+  <label><input type="radio" name="mode" value="pipe2022"> Pipeline 2022</label>
+
+  <button id="load-render-btn">Load &amp; Render Polygons</button>
+  <button id="download-btn">Download PNG</button>
+  <div id="status"></div>
+
+  <canvas id="myCanvas" width="2160" height="3840"></canvas>
+  <script src="https://cdn.jsdelivr.net/npm/papaparse@5.3.2/papaparse.min.js"></script>
+  <script>
+  /* ====== CONFIG ====== */
+  const GEOFILE    = "final_areas_2025_fixed (1).geojson";
+  const CSVFILE    = "scaleup_pipeline_density_2022_23.csv";
+
+  const AREA_PROP  = "Final area";
+  const CSV_AREA   = "LOCAL AREA";
+
+  const COL_SCALE  = "Scaleup density per 100k (2023)";
+  const COL_PIPE23 = "Pipeline density per 100k (2023)";
+  const COL_PIPE22 = "Pipeline density per 100k (2022)";
+
+  /* ====== STATE ====== */
+  let geoJSON=null, csvRows=null, mode="scale2023";
+
+  /* ====== UI HOOKS ====== */
+  document.querySelectorAll('input[name="mode"]').forEach(radio=>{
+    radio.onchange = evt=>{
+      mode = evt.target.value;
+      if(geoJSON && csvRows) drawPolygons();
+    };
+  });
+  document.getElementById('load-render-btn').onclick = loadAndRender;
+  document.getElementById('download-btn').onclick    = downloadPng;
+
+  /* ====== LOAD & PARSE ====== */
+  async function loadAndRender(){
+    try {
+      setStatus("Loading…");
+      geoJSON = await (await fetch(GEOFILE)).json();
+      let txt = await (await fetch(CSVFILE)).text();
+      csvRows = Papa.parse(txt,{
+        header:true,skipEmptyLines:true,dynamicTyping:true
+      }).data;
+      setStatus("Rendering…");
+      drawPolygons();
+      setStatus("Done.");
+    } catch(err){
+      console.error(err);
+      setStatus("Error: "+err);
+    }
+  }
+  function setStatus(s){ document.getElementById('status').textContent = s }
+
+
+  /* ====== DRAW ====== */
+  function drawPolygons(){
+    const can = document.getElementById("myCanvas"),
+          ctx = can.getContext("2d");
+    ctx.clearRect(0,0,can.width,can.height);
+
+    // choose column + legend header
+    let col, legendHdr;
+    if(mode==="scale2023"){
+      col = COL_SCALE;
+      legendHdr = "Scale-ups / 100 k (2023)";
+    } else if(mode==="pipe2023"){
+      col = COL_PIPE23;
+      legendHdr = "Pipeline / 100 k (2023)";
+    } else {
+      col = COL_PIPE22;
+      legendHdr = "Pipeline / 100 k (2022)";
+    }
+
+    // find bbox
+    let minLat=1e9, maxLat=-1e9, minLng=1e9, maxLng=-1e9;
+    geoJSON.features.forEach(f=>{
+      const polys = f.geometry.type==="Polygon"
+        ? [f.geometry.coordinates]
+        : f.geometry.coordinates;
+      polys.forEach(rings=>
+        rings[0].forEach(([lng,lat])=>{
+          minLat=Math.min(minLat,lat);
+          maxLat=Math.max(maxLat,lat);
+          minLng=Math.min(minLng,lng);
+          maxLng=Math.max(maxLng,lng);
+        }));
+    });
+    const pad=0.05, latR=maxLat-minLat, lngR=maxLng-minLng;
+    minLat-=latR*pad; maxLat+=latR*pad;
+    minLng-=lngR*pad; maxLng+=lngR*pad;
+    const project = (lat,lng)=>[
+      (lng-minLng)/(maxLng-minLng)*can.width,
+      can.height-(lat-minLat)/(maxLat-minLat)*can.height
+    ];
+
+    // draw each feature
+    geoJSON.features.forEach(feat=>{
+      const area = feat.properties[AREA_PROP],
+            row  = csvRows.find(r=>r[CSV_AREA]===area),
+            v    = row && row[col]!=null ? +row[col] : 0,
+            fill = mode==="scale2023" ? colorForScale(v) : colorForPipe(v);
+
+      ctx.fillStyle   = fill;
+      ctx.strokeStyle = "#fff";
+      ctx.lineWidth   = 1;
+
+      const polys = feat.geometry.type==="Polygon"
+        ? [feat.geometry.coordinates]
+        : feat.geometry.coordinates;
+      polys.forEach(rings=>{
+        ctx.beginPath();
+        rings[0].forEach(([lng,lat],i)=>{
+          let [x,y]=project(lat,lng);
+          i? ctx.lineTo(x,y) : ctx.moveTo(x,y);
+        });
+        ctx.closePath();
+        ctx.fill();
+        ctx.stroke();
+      });
+    });
+
+    // legend + get its bottom‐Y
+    const legendY = drawLegend(ctx, can.width, legendHdr);
+
+    // draw pills
+    if(mode==="scale2023"){
+      drawTopScaleAreas(ctx, can.width, legendY);
+    } else {
+      drawTopPipeAreas(ctx, can.width, legendY, col, mode);
+    }
+  }
+
+
+  /* ====== COLOR THRESHOLDS ====== */
+  function colorForScale(v){
+    return v>60   ? "#006400"
+         : v>50   ? "#7FFFD4"
+         : v>45   ? "#87CEFA"
+         : v>40   ? "#4169E1"
+                 : "#00008B";
+  }
+  function colorForPipe(v){
+    return v>35   ? "#006400"
+         : v>30   ? "#7FFFD4"
+         : v>25   ? "#87CEFA"
+                 : "#4169E1";
+  }
+
+
+  /* ====== LEGEND ====== */
+  function drawLegend(ctx,cw,header){
+    const items = (mode==="scale2023")
+      ? [
+         {label:"More than 60",   color:"#006400"},
+         {label:"50 – 60", color:"#7FFFD4"},
+         {label:"45 – 50", color:"#87CEFA"},
+         {label:"40 – 45", color:"#4169E1"},
+         {label:"<Less than 40",   color:"#00008B"}
+        ]
+      : [
+         {label:"More than 35",   color:"#006400"},
+         {label:"30 – 35", color:"#7FFFD4"},
+         {label:"25 – 30", color:"#87CEFA"},
+         {label:"Less than 25",   color:"#4169E1"}
+        ];
+
+    let x = cw - 280, y = 200;
+    ctx.save();
+    ctx.font = "bold 16px sans-serif";
+    ctx.fillStyle = "#000";
+    ctx.fillText(header, x, y);
+    y += 24;
+    ctx.font = "14px sans-serif";
+    items.forEach(it=>{
+      ctx.beginPath();
+      ctx.fillStyle = it.color;
+      ctx.arc(x+10, y+8, 8, 0, 2*Math.PI);
+      ctx.fill();
+      ctx.fillStyle="#000";
+      ctx.fillText(it.label, x+28, y+12);
+      y+=26;
+    });
+    ctx.restore();
+    return y;
+  }
+
+
+  /* ====== TOP-SCALE-UP PILL LIST ====== */
+  function drawTopScaleAreas(ctx,cw,legendY){
+    const arr = csvRows
+      .filter(r=>r[COL_SCALE]!=null)
+      .map(r=>({n:r[CSV_AREA],v:+r[COL_SCALE]}))
+      .sort((a,b)=>b.v - a.v)
+      .slice(0,8);
+
+    let x = cw - 350, y = legendY + 40;
+    ctx.save();
+    ctx.font = "bold 16px sans-serif";
+    ctx.fillStyle = "#000";
+    ctx.fillText("AREAS WITH HIGHEST SCALE-UP DENSITY", x, y-10);
+    ctx.font = "bold 14px sans-serif";
+
+    arr.forEach(item=>{
+      let label = "• " + item.n.toUpperCase(),
+          textW = ctx.measureText(label).width,
+          pad   = 12, pillH=24, pillW = textW+pad*2,
+          rad   = pillH/2;
+
+      if(pillW>330) {
+        ctx.font="bold 12px sans-serif";
+        textW = ctx.measureText(label).width;
+        pillW = textW+pad*2;
+      }
+      if(x + pillW > cw - 20){
+        x = cw - pillW - 20;
+        if(x<0) x=0;
+      }
+
+      ctx.beginPath();
+      ctx.moveTo(x+rad,y);
+      ctx.lineTo(x+ pillW-rad, y);
+      ctx.quadraticCurveTo(x+ pillW, y, x+ pillW, y+rad);
+      ctx.lineTo(x+ pillW, y+ pillH-rad);
+      ctx.quadraticCurveTo(x+ pillW, y+ pillH, x+ pillW-rad, y+ pillH);
+      ctx.lineTo(x+rad, y+ pillH);
+      ctx.quadraticCurveTo(x, y+ pillH, x, y+ pillH-rad);
+      ctx.lineTo(x, y+rad);
+      ctx.quadraticCurveTo(x, y, x+rad, y);
+      ctx.closePath();
+      ctx.fillStyle = colorForScale(item.v);
+      ctx.fill();
+
+      ctx.fillStyle = "#fff";
+      let off = (ctx.font==="bold 14px sans-serif"?17:15);
+      ctx.fillText(label, x+pad, y+off);
+
+      y += 40;
+      ctx.font="bold 14px sans-serif";
+    });
+    ctx.restore();
+  }
+
+
+  /* ====== TOP-PIPELINE PILL LIST ====== */
+  function drawTopPipeAreas(ctx,cw,legendY,col,_mode){
+    const arr = csvRows
+      .filter(r=>r[col]!=null)
+      .map(r=>({n:r[CSV_AREA],v:+r[col]}))
+      .sort((a,b)=>b.v - a.v)
+      .slice(0,8);
+
+    let title = _mode==="pipe2023"
+              ? "AREAS WITH HIGHEST PIPELINE DENSITY (2023)"
+              : "AREAS WITH HIGHEST PIPELINE DENSITY (2022)";
+    let x = cw - 350, y = legendY + 40;
+    ctx.save();
+    ctx.font = "bold 16px sans-serif";
+    ctx.fillStyle = "#000";
+    ctx.fillText(title, x, y-10);
+    ctx.font = "bold 14px sans-serif";
+
+    arr.forEach(item=>{
+      let label = "• " + item.n.toUpperCase(),
+          textW = ctx.measureText(label).width,
+          pad   = 12, pillH=24, pillW = textW+pad*2,
+          rad   = pillH/2;
+
+      if(pillW>330) {
+        ctx.font="bold 12px sans-serif";
+        textW = ctx.measureText(label).width;
+        pillW = textW+pad*2;
+      }
+      if(x + pillW > cw - 20){
+        x = cw - pillW - 20;
+        if(x<0) x=0;
+      }
+
+      ctx.beginPath();
+      ctx.moveTo(x+rad,y);
+      ctx.lineTo(x+ pillW-rad, y);
+      ctx.quadraticCurveTo(x+ pillW, y, x+ pillW, y+rad);
+      ctx.lineTo(x+ pillW, y+ pillH-rad);
+      ctx.quadraticCurveTo(x+ pillW, y+ pillH, x+ pillW-rad, y+ pillH);
+      ctx.lineTo(x+rad, y+ pillH);
+      ctx.quadraticCurveTo(x, y+ pillH, x, y+ pillH-rad);
+      ctx.lineTo(x, y+rad);
+      ctx.quadraticCurveTo(x, y, x+rad, y);
+      ctx.closePath();
+      ctx.fillStyle = colorForPipe(item.v);
+      ctx.fill();
+
+      ctx.fillStyle = "#fff";
+      let off = (ctx.font==="bold 14px sans-serif"?17:15);
+      ctx.fillText(label, x+pad, y+off);
+
+      y += 40;
+      ctx.font="bold 14px sans-serif";
+    });
+    ctx.restore();
+  }
+
+
+  /* ====== DOWNLOAD ====== */
+  function downloadPng(){
+    const a = document.createElement("a");
+    a.download = "density_map.png";
+    a.href = document.getElementById("myCanvas").toDataURL("image/png");
+    a.click();
+  }
+  </script>
+</body>
+</html>

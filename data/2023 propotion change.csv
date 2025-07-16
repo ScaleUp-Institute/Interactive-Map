@@ -1,0 +1,222 @@
+Region,Sector_short,Proportion - 2023,Change in proportion
+East Midlands,Accommodation & Food,10.5,-0.1
+East Midlands,Admin & Support Services,9.6,-0.4
+East Midlands,Agri & Mining,0.1,0.1
+East Midlands,Construction,9.6,-0.4
+East Midlands,Creative & Arts,3.7,-0.5
+East Midlands,Education,3.1,-0.4
+East Midlands,Energy,0.1,0.1
+East Midlands,Finance & Insurance,1.5,-0.4
+East Midlands,Health & Social Work,9,1.1
+East Midlands,Info & Communication,4.5,-0.2
+East Midlands,Manufacturing,13.3,-0.5
+East Midlands,Other Service,1.7,0.6
+East Midlands,"Professional, Scientific & Tech",9.2,0
+East Midlands,Real Estate,1.6,-0.2
+East Midlands,Transport,5.2,-0.2
+East Midlands,Water & Sewage,1.3,0.1
+East Midlands,Wholesale & Retail,16,1.3
+East of England,Accommodation & Food,10.6,-1.5
+East of England,Admin & Support Services,13.3,-0.8
+East of England,Agri & Mining,0.1,0.1
+East of England,Construction,9.3,-1.5
+East of England,Creative & Arts,4.3,-1.2
+East of England,Education,2.7,0.5
+East of England,Energy,0.1,0.2
+East of England,Finance & Insurance,1.3,0
+East of England,Health & Social Work,8.6,1
+East of England,Info & Communication,5.4,0.6
+East of England,Manufacturing,8.1,0.5
+East of England,Other Service,1.8,0.5
+East of England,"Professional, Scientific & Tech",11.5,0
+East of England,Real Estate,1.8,0.1
+East of England,Transport,5.6,-0.2
+East of England,Water & Sewage,1.1,-0.3
+East of England,Wholesale & Retail,14.7,1.7
+London,Accommodation & Food,10,-1.1
+London,Admin & Support Services,12.9,-0.8
+London,Agri & Mining,0.1,0
+London,Construction,3.2,0.4
+London,Creative & Arts,2.2,0
+London,Education,2.9,0.3
+London,Energy,0.4,-0.1
+London,Finance & Insurance,5.9,0.2
+London,Health & Social Work,6.3,-0.1
+London,Info & Communication,17.9,-1.1
+London,Manufacturing,2.7,-0.2
+London,Other Service,2,0.1
+London,"Professional, Scientific & Tech",19.2,0.2
+London,Real Estate,2.4,0.4
+London,Transport,2.1,0
+London,Water & Sewage,0.2,0.1
+London,Wholesale & Retail,9.6,1.4
+North East,Accommodation & Food,13.5,-2.3
+North East,Admin & Support Services,10.2,-0.4
+North East,Agri & Mining,0.3,-0.3
+North East,Construction,10.2,0
+North East,Creative & Arts,3.6,-0.7
+North East,Education,2.9,-0.9
+North East,Energy,0.8,-0.8
+North East,Finance & Insurance,1,0
+North East,Health & Social Work,9.4,2.3
+North East,Info & Communication,6,-0.6
+North East,Manufacturing,9.9,0.3
+North East,Other Service,1.8,0.6
+North East,"Professional, Scientific & Tech",9.4,1.8
+North East,Real Estate,1.8,-0.3
+North East,Transport,3.9,0
+North East,Water & Sewage,0.8,0.7
+North East,Wholesale & Retail,14.6,0.5
+North West,Accommodation & Food,11,-0.7
+North West,Admin & Support Services,10.7,-0.2
+North West,Agri & Mining,0.2,-0.2
+North West,Construction,8.1,0.4
+North West,Creative & Arts,3.1,-0.5
+North West,Education,2.8,0
+North West,Energy,0.1,0.2
+North West,Finance & Insurance,1.7,0.2
+North West,Health & Social Work,10.3,0.3
+North West,Info & Communication,6.2,-0.6
+North West,Manufacturing,9.5,-0.5
+North West,Other Service,2.2,0
+North West,"Professional, Scientific & Tech",12.1,-0.3
+North West,Real Estate,2.3,0
+North West,Transport,3.9,0.4
+North West,Water & Sewage,1.2,0
+North West,Wholesale & Retail,14.6,1.4
+Northern Ireland,Accommodation & Food,9.8,1
+Northern Ireland,Admin & Support Services,7.2,0.4
+Northern Ireland,Agri & Mining,0.4,0.2
+Northern Ireland,Construction,12.5,-1.1
+Northern Ireland,Creative & Arts,4.2,-1.7
+Northern Ireland,Education,0.8,0.5
+Northern Ireland,Energy,0.8,-0.8
+Northern Ireland,Finance & Insurance,1.5,-0.9
+Northern Ireland,Health & Social Work,10.6,2.7
+Northern Ireland,Info & Communication,5.3,1
+Northern Ireland,Manufacturing,13.6,-1.6
+Northern Ireland,Other Service,1.9,0
+Northern Ireland,"Professional, Scientific & Tech",8,-1
+Northern Ireland,Real Estate,0.8,0.5
+Northern Ireland,Transport,4.5,-0.1
+Northern Ireland,Water & Sewage,1.1,0.2
+Northern Ireland,Wholesale & Retail,17,0.7
+Scotland,Accommodation & Food,16.1,-3.2
+Scotland,Admin & Support Services,10.3,-0.7
+Scotland,Agri & Mining,0.6,0.1
+Scotland,Construction,12.4,0.7
+Scotland,Creative & Arts,4.2,0
+Scotland,Education,2.2,0.1
+Scotland,Energy,0.3,-0.1
+Scotland,Finance & Insurance,0.8,0.1
+Scotland,Health & Social Work,7.7,3.5
+Scotland,Info & Communication,5.9,-0.1
+Scotland,Manufacturing,8.4,0
+Scotland,Other Service,2.7,0.1
+Scotland,"Professional, Scientific & Tech",10.8,-0.1
+Scotland,Real Estate,1.7,-0.3
+Scotland,Transport,4.3,-1
+Scotland,Water & Sewage,0.5,0
+Scotland,Wholesale & Retail,11.2,0.7
+South East,Accommodation & Food,10.9,-1
+South East,Admin & Support Services,11.8,-0.7
+South East,Agri & Mining,0,0.1
+South East,Construction,6.6,-0.7
+South East,Creative & Arts,3.9,-0.5
+South East,Education,3.4,-0.2
+South East,Energy,0.2,-0.1
+South East,Finance & Insurance,1.2,0.3
+South East,Health & Social Work,8.7,1
+South East,Info & Communication,10.9,0.2
+South East,Manufacturing,6.6,-0.3
+South East,Other Service,2.2,0.1
+South East,"Professional, Scientific & Tech",12.8,0.2
+South East,Real Estate,1.5,0.5
+South East,Transport,4,-0.4
+South East,Water & Sewage,0.8,0
+South East,Wholesale & Retail,14.5,1.4
+South West,Accommodation & Food,16.8,-1.3
+South West,Admin & Support Services,10.6,0
+South West,Agri & Mining,0,0.2
+South West,Construction,8.5,0.2
+South West,Creative & Arts,4.3,-0.6
+South West,Education,2.3,0.7
+South West,Energy,0.5,-0.2
+South West,Finance & Insurance,1.2,-0.2
+South West,Health & Social Work,9.7,1.1
+South West,Info & Communication,7.4,-0.9
+South West,Manufacturing,8.2,0.4
+South West,Other Service,1.8,0.5
+South West,"Professional, Scientific & Tech",9.8,-0.2
+South West,Real Estate,1.8,-0.1
+South West,Transport,2.7,0.1
+South West,Water & Sewage,1,-0.1
+South West,Wholesale & Retail,13.2,0.6
+United Kingdom,Accommodation & Food,11.7,-1.2
+United Kingdom,Admin & Support Services,11.3,-0.3
+United Kingdom,Agri & Mining,0.1,0.1
+United Kingdom,Construction,7.6,0.1
+United Kingdom,Creative & Arts,3.4,-0.5
+United Kingdom,Education,2.7,0.2
+United Kingdom,Energy,0.3,-0.1
+United Kingdom,Finance & Insurance,2.2,0.1
+United Kingdom,Health & Social Work,8.6,1
+United Kingdom,Info & Communication,9.2,-0.5
+United Kingdom,Manufacturing,8.1,-0.1
+United Kingdom,Other Service,2.1,0.1
+United Kingdom,"Professional, Scientific & Tech",12.5,0
+United Kingdom,Real Estate,1.8,0.2
+United Kingdom,Transport,3.8,-0.1
+United Kingdom,Water & Sewage,0.9,0
+United Kingdom,Wholesale & Retail,13.6,1.2
+Wales,Accommodation & Food,16.6,-3.3
+Wales,Admin & Support Services,9.9,0.9
+Wales,Agri & Mining,0,0
+Wales,Construction,10.6,1.1
+Wales,Creative & Arts,3.9,-0.6
+Wales,Education,2.3,0.2
+Wales,Energy,0,0.4
+Wales,Finance & Insurance,1.2,-0.4
+Wales,Health & Social Work,10.1,2.4
+Wales,Info & Communication,3.9,0.3
+Wales,Manufacturing,11.3,-0.5
+Wales,Other Service,1.8,0.3
+Wales,"Professional, Scientific & Tech",8.5,0.2
+Wales,Real Estate,0.9,1.2
+Wales,Transport,4.6,-1.3
+Wales,Water & Sewage,1.8,-0.6
+Wales,Wholesale & Retail,12.4,-0.3
+West Midlands,Accommodation & Food,9.6,-1.5
+West Midlands,Admin & Support Services,11.5,-0.1
+West Midlands,Agri & Mining,0,0.2
+West Midlands,Construction,7.3,1.6
+West Midlands,Creative & Arts,3.3,-0.9
+West Midlands,Education,2.6,-0.2
+West Midlands,Energy,0.1,0.1
+West Midlands,Finance & Insurance,0.9,0.1
+West Midlands,Health & Social Work,10,0.8
+West Midlands,Info & Communication,5.7,-0.2
+West Midlands,Manufacturing,12.5,0.3
+West Midlands,Other Service,2.4,-0.2
+West Midlands,"Professional, Scientific & Tech",9,0.1
+West Midlands,Real Estate,1.1,0.5
+West Midlands,Transport,5.1,0
+West Midlands,Water & Sewage,1,0
+West Midlands,Wholesale & Retail,18.1,-0.6
+Yorkshire and The Humber,Accommodation & Food,11.8,0
+Yorkshire and The Humber,Admin & Support Services,9.6,0.7
+Yorkshire and The Humber,Agri & Mining,0.1,-0.1
+Yorkshire and The Humber,Construction,9.7,-0.4
+Yorkshire and The Humber,Creative & Arts,3.4,-0.9
+Yorkshire and The Humber,Education,2,0.9
+Yorkshire and The Humber,Energy,0.2,0
+Yorkshire and The Humber,Finance & Insurance,1,0.2
+Yorkshire and The Humber,Health & Social Work,8.8,0.3
+Yorkshire and The Humber,Info & Communication,5.4,-0.6
+Yorkshire and The Humber,Manufacturing,12.8,-1
+Yorkshire and The Humber,Other Service,1.9,-0.2
+Yorkshire and The Humber,"Professional, Scientific & Tech",9.6,-0.3
+Yorkshire and The Humber,Real Estate,1.7,-0.1
+Yorkshire and The Humber,Transport,4.1,-0.2
+Yorkshire and The Humber,Water & Sewage,1.1,0.1
+Yorkshire and The Humber,Wholesale & Retail,16.8,1.6
