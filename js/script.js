@@ -38,9 +38,10 @@ var baseMaps = {
 
 // **Define the universityLayer before using it**
 var universityLayer = L.layerGroup();
-
 // Define the infrastructure layer group
 var infrastructureLayer = L.layerGroup();
+// Define the support program layer group
+var supportProgramLayer = L.layerGroup();
 
 // **Create an object to hold the overlay layers**
 var overlays = {
@@ -124,6 +125,7 @@ var clusterControl;
 var clusterRegions = {};
 var clusterLayers = {};
 var currentSectors = []; // Array to hold selected sectors
+window.selectionOrder = [];
 var currentClusters = []; // Array to hold selected clusters
 var polygonVisibility = false;
 var clusterColors = {};
@@ -139,7 +141,8 @@ var highlightedPolygons = [];
 var magnifyingGlass;
 var universityData = [];
 var infrastructureData = [];
-var universityLayer = L.layerGroup();
+var supportProgramData = [];
+
 
 // List of company numbers to exclude
 var excludedCompanyNumbers = [
@@ -457,63 +460,40 @@ Papa.parse('data/university_data.csv', {
   }
 });
 
+function populateInfrastructureLayer(data) {
+  infrastructureData = data;
+}
+
 Papa.parse('data/Infrastructure_data.csv', {
   download: true,
   header: true,
   dynamicTyping: true,
   skipEmptyLines: true,
   complete: function(results) {
-    var data = results.data;
-    populateInfrastructureLayer(data);
+    populateInfrastructureLayer(results.data);
   },
   error: function(error) {
     console.error('Error parsing business parks CSV:', error);
   }
 });
 
-function addPolygonToggleControl() {
-  if (polygonToggleControl) {
-    console.log('Display Mode Control already exists.');
-    return; // Prevent adding multiple controls
-  }
-
-  console.log('Adding Display Mode Control.');
-
-  polygonToggleControl = L.control({ position: 'topright' });
-  
-  polygonToggleControl.onAdd = function () {
-    var div = L.DomUtil.create('div', 'polygon-toggle-control');
-    var html = `
-      <label>Display Mode:</label><br>
-      <select id="display-mode-select">
-        <option value="points" ${displayMode === 'points' ? 'selected' : ''}>See Cluster Points</option>
-        <option value="polygons" ${displayMode === 'polygons' ? 'selected' : ''}>See Cluster Polygons</option>
-        <option value="both" ${displayMode === 'both' ? 'selected' : ''}>See Both Clusters & Polygons</option>
-      </select>
-    `;
-    div.innerHTML = html;
-
-    // Attach event listener within the onAdd method
-    var displayModeSelect = div.querySelector('#display-mode-select');
-    if (displayModeSelect) {
-      console.log('Display mode selector found'); // Debugging log
-      displayModeSelect.addEventListener('change', function () {
-        displayMode = this.value; // 'points', 'polygons', or 'both'
-        console.log('Display mode changed to:', displayMode); // Debugging log
-        updateClusterLayers();
-      });
-    } else {
-      console.error('Display mode select element not found.');
-    }
-
-    // Disable click events from propagating to the map
-    L.DomEvent.disableClickPropagation(div);
-
-    return div;
-  };
-
-  polygonToggleControl.addTo(map);
+function populateSupportProgramLayer(data) {
+  supportProgramData = data;
 }
+
+// Load Support Program data
+Papa.parse('data/support_program.csv', {
+  download: true,
+  header: true,
+  dynamicTyping: true,
+  skipEmptyLines: true,
+  complete: function(results) {
+    populateSupportProgramLayer(results.data);
+  },
+  error: function(err) {
+    console.error('Error parsing Support Program CSV:', err);
+  }
+});
 
 function finalizeMapSetup() {
   console.log('finalizeMapSetup called'); // Debugging log
@@ -522,8 +502,13 @@ function finalizeMapSetup() {
   addLegend();
 }
 
+// Updated snippet: Define the sector stats panel and map controls, then toggle them in sync
 document.querySelectorAll('#layer-selection input[type=checkbox]').forEach(function (checkbox) {
   checkbox.addEventListener('change', function () {
+    // Define references for the panel and controls (so we can toggle them)
+    const panel = document.getElementById('sector-stats-panel');
+    const controls = document.querySelector('.leaflet-control-container');
+
     var sectorCheckboxes = document.querySelectorAll('.sector-checkbox');
     if (this.checked) {
       // Deselect and uncheck all sectors
@@ -536,12 +521,17 @@ document.querySelectorAll('#layer-selection input[type=checkbox]').forEach(funct
       removeClusterLayers();
       document.getElementById('overall-stats-button').style.display = 'none';
 
+      // Toggle the panel and controls, so they slide if needed
+      panel.classList.toggle('show');
+      controls.classList.toggle('controls-shift-right');
+
       // Add the selected map layer
       switch (this.id) {
         case 'local-authorities':
           map.addLayer(localAuthoritiesLayer);
           break;
         case 'final-areas':
+          /* highlight WMCA, wash out others */
           map.addLayer(finalAreasLayer);
           break;
         case 'scaleup-density':
@@ -592,7 +582,6 @@ document.querySelectorAll('#layer-selection input[type=checkbox]').forEach(funct
       updateSearchControl(layerName);
     } else {
       // Layer is unchecked
-      // Remove the layer from the map
       switch (this.id) {
         case 'local-authorities':
           if (map.hasLayer(localAuthoritiesLayer)) {
@@ -622,25 +611,31 @@ document.querySelectorAll('#layer-selection input[type=checkbox]').forEach(funct
       updateLegend('');
       updateSearchControl('');
     }
-      // After handling layer selection, check if no sectors are chosen
-      if (currentSectors.length === 0) {
-        // Remove any university or infrastructure markers
-        if (map.hasLayer(universityLayer)) {
-          map.removeLayer(universityLayer);
-        }
-        if (map.hasLayer(infrastructureLayer)) {
-          map.removeLayer(infrastructureLayer);
-        }
 
-        // Set the overlay dropdown to 'none'
-        var overlaySelect = document.getElementById('overlay-select');
-        if (overlaySelect) {
-          overlaySelect.value = 'none';
-  }
-}
-});
-});
+    // After handling layer selection, check if no sectors are chosen
+    if (currentSectors.length === 0) {
+      // Remove any university or infrastructure markers
+      if (map.hasLayer(universityLayer)) {
+        map.removeLayer(universityLayer);
+      }
+      if (map.hasLayer(infrastructureLayer)) {
+        map.removeLayer(infrastructureLayer);
+      }
 
+      // Set the overlay dropdown to 'none'
+      var overlaySelect = document.getElementById('overlay-select');
+      if (overlaySelect) {
+        overlaySelect.value = 'none';
+      }
+
+      hideSectorStats();
+
+    }
+
+    // Close any open popups
+    map.closePopup();
+  });
+});
 
 function localAuthoritiesStyle(feature) {
   return {
@@ -1014,7 +1009,6 @@ function addLegend() {
   });
 }
 
-
 function updateLegend(activeLayerName) {
   if (legend) {
     legend.update(activeLayerName);
@@ -1057,14 +1051,24 @@ function getClusterNameById(clusterId) {
 }
 
 // Handle "Overall Stats" Button Click
-document.getElementById('overall-stats-button').addEventListener('click', function (e) {
-  e.preventDefault();
-  if (currentSectors.length > 0) {
-    showSectorStatistics(currentSectors);
-  } else {
-    alert('Please select at least one sector to view statistics.');
+document.getElementById('overall-stats-button').addEventListener('click', function() {
+  const statsPanel = document.getElementById('sector-stats-panel');
+  // Grab everything that sits on the left side in Leaflet
+  const leftControls = document.querySelectorAll('.leaflet-left');
+
+  // If panel is already open, hide it and unshift controls:
+  if (statsPanel.classList.contains('show')) {
+    hideSectorStats();
+    return;
   }
+
+  // Otherwise, compute & show fresh stats, then shift all .leaflet-left controls:
+  computeSectorStatistics();
+  showSectorStatistics(currentSectors);
+
+  leftControls.forEach(el => el.classList.add('controls-shift-right'));
 });
+
 
 function addSearchControl() {
   // Remove existing search control if any
@@ -1156,6 +1160,9 @@ loadClusterRegions(function () {
 });
 
 function loadSectorsData(sectorsList) {
+  const statsPanel = document.getElementById('sector-stats-panel');
+  const ctrlContainer = document.querySelector('.leaflet-control-container');
+
   if (sectorsList.length === 0) {
     // No sectors selected, clear data and remove layers
     companyData = [];
@@ -1163,136 +1170,148 @@ function loadSectorsData(sectorsList) {
     removeClusterLayers();
     updateLegend('');
     document.getElementById('overall-stats-button').style.display = 'none';
+
+    // Auto-hide the stats panel and un-shift controls
+    if (statsPanel) statsPanel.classList.remove('show');
+    if (ctrlContainer) ctrlContainer.classList.remove('controls-shift-right');
+
     return;
   }
-  var promises = sectorsList.map(function (sector) {
-    var clusterFile = sectors[sector];
-    var summaryFile = summaryStatsFiles[sector];
-    var financialFile = financialDataFiles[sector];
-    return new Promise(function (resolve, reject) {
-      // Load the cluster data
-      Papa.parse('data/' + clusterFile, {
+
+  const promises = sectorsList.map(sector => {
+    const clusterFile   = sectors[sector];
+    const summaryFile   = summaryStatsFiles[sector];
+    const financialFile = financialDataFiles[sector];
+
+    return new Promise(resolve => {
+      // 1) Load the cluster data
+      Papa.parse(`data/${clusterFile}`, {
         download: true,
         header: true,
         dynamicTyping: true,
         skipEmptyLines: true,
-        complete: function (clusterResults) {
-          var clusterData = clusterResults.data.filter(function (company) {
-            return company && company.Latitude && company.Longitude;
-          });
-          // Load the summary statistics data
-          Papa.parse('data/' + summaryFile, {
+        complete: clusterResults => {
+          const clusterData = clusterResults.data.filter(c => c && c.Latitude && c.Longitude);
+
+          // 2) Load the summary stats
+          Papa.parse(`data/${summaryFile}`, {
             download: true,
             header: true,
             dynamicTyping: true,
             skipEmptyLines: true,
-            complete: function (summaryResults) {
-              // Load the financial data
-              Papa.parse('data/' + financialFile, {
+            complete: summaryResults => {
+
+              // 3) Load the financial data
+              Papa.parse(`data/${financialFile}`, {
                 download: true,
                 header: true,
                 dynamicTyping: true,
                 skipEmptyLines: true,
-                complete: function (financialResults) {
+                complete: financialResults => {
                   resolve({
-                    sector: sector,
-                    clusterData: clusterData,
-                    summaryData: summaryResults.data,
+                    sector:        sector,
+                    clusterData:   clusterData,
+                    summaryData:   summaryResults.data,
                     financialData: financialResults.data
                   });
                 },
-                error: function (error) {
-                  console.error('Error parsing financial CSV for sector ' + sector + ':', error);
+                error: err => {
+                  console.error(`Error parsing financial CSV for sector ${sector}:`, err);
                   resolve({
-                    sector: sector,
-                    clusterData: clusterData,
-                    summaryData: summaryResults.data,
+                    sector:        sector,
+                    clusterData:   clusterData,
+                    summaryData:   summaryResults.data,
                     financialData: []
                   });
                 }
               });
+
             },
-            error: function (error) {
-              console.error('Error parsing summary statistics CSV for sector ' + sector + ':', error);
-              resolve({ sector: sector, clusterData: clusterData, summaryData: [], financialData: [] });
+            error: err => {
+              console.error(`Error parsing summary CSV for sector ${sector}:`, err);
+              resolve({
+                sector:        sector,
+                clusterData:   clusterData,
+                summaryData:   [],
+                financialData: []
+              });
             }
           });
+
         },
-        error: function (error) {
-          console.error('Error parsing company clusters CSV for sector ' + sector + ':', error);
-          resolve({ sector: sector, clusterData: [], summaryData: [], financialData: [] });
+        error: err => {
+          console.error(`Error parsing cluster CSV for sector ${sector}:`, err);
+          resolve({
+            sector:        sector,
+            clusterData:   [],
+            summaryData:   [],
+            financialData: []
+          });
         }
       });
     });
   });
 
-  Promise.all(promises).then(function (sectorDataArray) {
+  Promise.all(promises).then(sectorDataArray => {
     companyData = [];
-    clusterSummaryData = {}; // Holds cluster-level summary data
+    clusterSummaryData = {};
 
-    sectorDataArray.forEach(function (sectorData) {
-      var sector = sectorData.sector;
-      var financialDataMap = {};
+    // Merge all sector data
+    sectorDataArray.forEach(sectorData => {
+      const sector = sectorData.sector;
+      const finMap = {};
 
-      // Create a mapping from Companynumber to financial data
-      sectorData.financialData.forEach(function (financialRecord) {
-        var companyNumber = financialRecord.Companynumber;
-        financialDataMap[companyNumber] = financialRecord;
+      sectorData.financialData.forEach(rec => {
+        finMap[rec.Companynumber] = rec;
       });
 
-      // Process cluster data and merge financial data
-      sectorData.clusterData.forEach(function (company) {
-        company.sector = sector;
-        company.cluster = (company.cluster !== undefined && company.cluster !== null) ? company.cluster.toString() : '0';
-        company.clusterId = sector + '_' + company.cluster;
+      // Merge per-company
+      sectorData.clusterData.forEach(comp => {
+        comp.sector    = sector;
+        comp.cluster   = (comp.cluster != null ? comp.cluster.toString() : '0');
+        comp.clusterId = `${sector}_${comp.cluster}`;
 
-        var companyNumber = company.Companynumber;
-        var financialRecord = financialDataMap[companyNumber];
-
-        if (financialRecord) {
-          // Merge financial data into company object
-          company.Companyname = financialRecord.Companyname;
-          company.BestEstimateGrowthPercentagePerYear = parseFloat(financialRecord.BestEstimateGrowthPercentagePerYear);
-          company.TotalInnovateUKFunding = parseFloat(financialRecord.TotalInnovateUKFunding);
-          company.WomenFounded = parseInt(financialRecord.WomenFounded); // Parse as integer (0 or 1)
-          company.total_employees = parseNumber(financialRecord.TotalEmployees);
-          company.total_turnover = parseNumber(financialRecord.TotalTurnover);
-        } else {
-          // Handle companies without financial data
-          company.Companyname = 'Unknown';
-          company.BestEstimateGrowthPercentagePerYear = null;
-          company.TotalInnovateUKFunding = null;
-          company.WomenFounded = null;
-          company.total_employees = 0;
-          company.total_turnover = 0;
-        }
+        const finRec = finMap[comp.Companynumber] || {};
+        comp.Companyname                       = finRec.Companyname || 'Unknown';
+        comp.BestEstimateGrowthPercentagePerYear = parseFloat(finRec.BestEstimateGrowthPercentagePerYear) || null;
+        comp.TotalInnovateUKFunding            = parseFloat(finRec.TotalInnovateUKFunding)      || null;
+        comp.WomenFounded                      = parseInt(finRec.WomenFounded)                 || null;
+        comp.total_employees                   = parseNumber(finRec.TotalEmployees)           || 0;
+        comp.total_turnover                    = parseNumber(finRec.TotalTurnover)            || 0;
       });
 
       companyData = companyData.concat(sectorData.clusterData);
 
-      // Process summary data for clusters
-      sectorData.summaryData.forEach(function (summary) {
-        var clusterId = sector + '_' + summary.cluster.toString();
-        clusterSummaryData[clusterId] = summary;
-        clusterSummaryData[clusterId].sector = sector;
+      // Merge cluster summary
+      sectorData.summaryData.forEach(sum => {
+        const cid = `${sector}_${sum.cluster}`;
+        clusterSummaryData[cid] = sum;
+        clusterSummaryData[cid].sector = sector;
       });
     });
 
-    companyData = companyData.filter(function(company) {
-      var companyNumber = company.Companynumber.toString().trim();
-      return !excludedCompanyNumbers.includes(companyNumber);
-    });
+    // Exclude unwanted companies
+    companyData = companyData.filter(c =>
+      !excludedCompanyNumbers.includes(c.Companynumber.toString().trim())
+    );
 
+    // Rebuild map layers
     generateClusterColors();
-    populateClusterCheckboxes(); // Updated function
-    currentClusters = getAllClusterIds().filter(clusterId => currentSectors.includes(clusterId.split('_')[0]));
+    populateClusterCheckboxes();
+    currentClusters = getAllClusterIds().filter(cid =>
+      currentSectors.includes(cid.split('_')[0])
+    );
     addCompanyClusters();
-    // Compute overall statistics for each sector
     computeSectorStatistics();
-    if (currentSectors.length > 0) {
-      updateLegend('Sectors');
-    } else {
-      updateLegend('');
+    updateLegend(currentSectors.length > 0 ? 'Sectors' : '');
+
+    const statsPanel = document.getElementById('sector-stats-panel');
+    if (statsPanel && statsPanel.classList.contains('show')) {
+      computeSectorStatistics();
+      const ordered = window.selectionOrder.length
+        ? window.selectionOrder
+        : currentSectors;
+      showSectorStatistics(ordered);
     }
   });
 }
@@ -1386,47 +1405,63 @@ function computeSectorStatistics() {
 }
 
 function showSectorStatistics(selectedSectors) {
-  var content = '<button id="info-box-close" class="info-box-close">&times;</button>';
+  const statsPanel = document.getElementById('sector-stats-panel');
+  if (!statsPanel) {
+    console.error('No stats panel found in the DOM');
+    return;
+  }
 
-  selectedSectors.forEach(function (sector) {
-    var stats = sectorStats[sector];
-    if (stats) {
-      content += `
-        <h3>${sector} - Overall Statistics</h3>
-        <p><strong>Number of Companies:</strong> ${stats.companyCount}</p>
+  // Clear old content
+  statsPanel.innerHTML = `
+    <div class="stats-header">
+      <h2>Sector Stats</h2>
+      <button class="close-panel-btn" onclick="hideSectorStats()">&times;</button>
+    </div>
+  `;
+
+  // Build card layouts for each sector
+  selectedSectors.forEach(sector => {
+    const stats = sectorStats[sector];
+    if (!stats) {
+      statsPanel.innerHTML += `
+        <div class="stats-card">
+          <h3>${sector}</h3>
+          <p>No statistics available.</p>
+        </div>
+      `;
+      return;
+    }
+
+    statsPanel.innerHTML += `
+      <div class="stats-card">
+        <h3>${sector}</h3>
+        <p><strong>Companies:</strong> ${stats.companyCount}</p>
         <p><strong>Total Employees:</strong> ${Math.round(stats.totalEmployees)}</p>
         <p><strong>Total Turnover:</strong> ${formatTurnover(stats.totalTurnover)}</p>
-        <p><strong>Average Growth Rate:</strong> ${(stats.averageGrowthRate * 100).toFixed(2)}%</p>
-        <p><strong>% Female-Founded Companies:</strong> ${stats.femaleFoundedPercentage.toFixed(2)}%</p>
-        <p><strong>Total IUK Grant Funding:</strong> ${formatTurnover(stats.totalIUKFunding)}</p>
-        <p><strong>Total Investment:</strong> ${formatTurnover(stats.totalInvestment)}</p>
-      `;
-    } else {
-      content += `<p>No statistics available for sector: ${sector}</p>`;
-    }
+        <p><strong>Avg Growth Rate:</strong> ${(stats.averageGrowthRate * 100).toFixed(2)}%</p>
+        <p><strong>% Female-Founded:</strong> ${stats.femaleFoundedPercentage.toFixed(2)}%</p>
+        <p><strong>IUK Funding:</strong> ${formatTurnover(stats.totalIUKFunding)}</p>
+        <p><strong>Investment:</strong> ${formatTurnover(stats.totalInvestment)}</p>
+      </div>
+    `;
   });
 
-  var infoBox = document.getElementById('info-box');
-  if (infoBox) {
-    infoBox.innerHTML = content;
-    infoBox.classList.remove('hidden');
+  // Show the panel
+  statsPanel.classList.remove('hidden');
+  statsPanel.classList.add('show');
+}
 
-    // Ensure the info box has the appropriate CSS classes
-    infoBox.classList.add('info-box');
+// Simple hide function
+function hideSectorStats() {
+  const statsPanel = document.getElementById('sector-stats-panel');
+  // Again grab all .leaflet-left elements
+  const leftControls = document.querySelectorAll('.leaflet-left');
 
-    // Add event listener for close button
-    var closeButton = document.getElementById('info-box-close');
-    if (closeButton) {
-      closeButton.addEventListener('click', function (e) {
-        infoBox.classList.add('hidden');
-        e.stopPropagation(); // Prevent the click from propagating to parent elements
-      });
-    } else {
-      console.error('Close button not found in info box');
-    }
-  } else {
-    console.error('Info box element not found');
-  }
+  // Hide the panel
+  statsPanel.classList.remove('show');
+
+  // Remove the shift class so everything moves back
+  leftControls.forEach(el => el.classList.remove('controls-shift-right'));
 }
 
 function removeClusterLayers() {
@@ -1486,153 +1521,172 @@ var companyClusterLayer = L.geoJSON(null, {
   }
 });
 
-// Function to handle sector selection changes
-function handleSectorSelectionChange() {
-  // Update the currentSectors array based on checked checkboxes
-  currentSectors = Array.from(document.querySelectorAll('.sector-checkbox:checked')).map(cb => cb.value);
+// Handle sector-chip clicks or Select-All / Deselect-All
+function handleSectorSelectionChange () {
 
-  var layerCheckboxes = document.querySelectorAll('#layer-selection input[type=checkbox]');
+  // 1) Figure out which sectors are now selected
+  currentSectors = getSelectedSectors();
 
   if (currentSectors.length > 0) {
-    layerCheckboxes.forEach(function (layerCheckbox) {
-      if (layerCheckbox.checked && layerCheckbox.id !== 'show-universities') {
-        layerCheckbox.checked = false;
-        switch (layerCheckbox.id) {
-          case 'local-authorities':
-            if (map.hasLayer(localAuthoritiesLayer)) {
-              map.removeLayer(localAuthoritiesLayer);
-            }
-            break;
-          case 'final-areas':
-            if (map.hasLayer(finalAreasLayer)) {
-              map.removeLayer(finalAreasLayer);
-            }
-            break;
-          case 'scaleup-density':
-            if (map.hasLayer(scaleupLayers['Scaleup density per 100k (2022)'])) {
-              map.removeLayer(scaleupLayers['Scaleup density per 100k (2022)']);
-            }
-            break;
-          case 'avg-growth':
-            if (map.hasLayer(scaleupLayers['Avg growth in scaleup density (2013-2022)'])) {
-              map.removeLayer(scaleupLayers['Avg growth in scaleup density (2013-2022)']);
-            }
-            break;
-          default:
-            // Do nothing for unknown layers
-            break;
-        }
-      }
-    });
-
-    updateLegend('');
-    updateSearchControl('');
-
+    // 2) (Re)load company + cluster data for those sectors
     loadSectorsData(currentSectors);
 
+    // 3) UI niceties
     document.getElementById('overall-stats-button').style.display = 'block';
-    addPolygonToggleControl();
-
-    // Remove the call to updateUniversityLayer(), as that function no longer exists
-    // updateUniversityLayer();
-
   } else {
+    // 2*) No sectors selected – wipe clusters & stats
     currentClusters = [];
     removeClusterLayers();
-
     document.getElementById('overall-stats-button').style.display = 'none';
     updateLegend('');
-
-    if (polygonToggleControl) {
-      map.removeControl(polygonToggleControl);
-      polygonToggleControl = null;
-      displayMode = 'both';
-      console.log('Display Mode Control removed.');
-      updateClusterLayers();
-    }
-
-    if (map.hasLayer(universityLayer)) {
-      map.removeLayer(universityLayer);
-    }
   }
 
-  // Now call updateOverlays() at the end to refresh the infrastructure and university layers
+  // 4) Keep any university / infrastructure overlays in sync
   updateOverlays();
 }
 
 function populateSectorCheckboxes() {
-  var sectorContainer = document.getElementById('sector-checkboxes');
-  sectorContainer.innerHTML = ''; // Clear existing checkboxes
+  const container = document.getElementById('sector-chips');
+  container.innerHTML = '';
 
-  for (var sector in sectors) {
-    var displayName = sectorDisplayNames[sector] || sector; // Use display name if available
+  Object.keys(sectors).forEach(sector => {
+    const chip = document.createElement('div');
+    chip.className     = 'sector-chip';
+    chip.textContent   = sectorDisplayNames[sector] || sector;
+    chip.dataset.value = sector;
 
-    var checkbox = document.createElement('input');
-    checkbox.type = 'checkbox';
-    checkbox.id = 'sector-' + sector;
-    checkbox.value = sector;
-    checkbox.classList.add('sector-checkbox');
-    checkbox.checked = false; // Uncheck by default
+    chip.onclick = () => {
+      // 1) Toggle visual state
+      chip.classList.toggle('selected');
 
-    var label = document.createElement('label');
-    label.htmlFor = checkbox.id;
-    label.textContent = displayName; // Set label to display name
+      // 2) Maintain click-order
+      if (chip.classList.contains('selected')) {
+        if (!window.selectionOrder.includes(sector)) {
+          window.selectionOrder.push(sector);
+        }
+      } else {
+        window.selectionOrder = window.selectionOrder.filter(s => s !== sector);
+      }
 
-    label.prepend(checkbox);
-    sectorContainer.appendChild(label);
-  }
+      // 3) Update map & stats
+      handleSectorSelectionChange();
 
-  // Attach event listeners to the sector checkboxes
-  var sectorCheckboxes = document.querySelectorAll('.sector-checkbox');
-  sectorCheckboxes.forEach(function (checkbox) {
-    checkbox.addEventListener('change', handleSectorSelectionChange);
+      // 4) **Ensure the display-mode bubble updates immediately**
+      updateDisplayModeToggleVisibility();
+    };
+
+    container.appendChild(chip);
   });
 }
-
 
 // Call this function after sectors are loaded
 populateSectorCheckboxes();
 
 // Select All Sectors
-document.getElementById('select-all-sectors').addEventListener('click', function() {
-  var sectorCheckboxes = document.querySelectorAll('.sector-checkbox');
-  sectorCheckboxes.forEach(function(checkbox) {
-    checkbox.checked = true;
-  });
+document.getElementById('select-all-sectors').addEventListener('click', () => {
+  document.querySelectorAll('.sector-chip').forEach(chip => chip.classList.add('selected'));
   handleSectorSelectionChange();
 });
 
 // Deselect All Sectors
-document.getElementById('deselect-all-sectors').addEventListener('click', function() {
-  var sectorCheckboxes = document.querySelectorAll('.sector-checkbox');
-  sectorCheckboxes.forEach(function(checkbox) {
-    checkbox.checked = false;
-  });
+document.getElementById('deselect-all-sectors').addEventListener('click', () => {
+  document.querySelectorAll('.sector-chip').forEach(chip => chip.classList.remove('selected'));
+  window.selectionOrder = [];
   handleSectorSelectionChange();
+  updateDisplayModeToggleVisibility();
 });
 
 function updateClusterLayers() {
-  console.log('updateClusterLayers called'); // Debugging log
-  console.log('Current displayMode:', displayMode); // Debugging log
+  console.log('updateClusterLayers called');
+  console.log('Current displayMode:', displayMode);
+
+  ///////////////////////////////////////////////////////////////////////
+  // 1) Batch-based animation helpers for smoother transitions
+  ///////////////////////////////////////////////////////////////////////
+
+  // Simple ease-out function: t from 0->1 => slower near end
+  function easeOut(progress) {
+    return 1 - Math.pow(1 - progress, 3);
+  }
+
+  // Animates an array of circle markers from (radius=0, opacity=0) up to
+  // (finalRadius, finalFillOpacity) using a single requestAnimationFrame loop
+  function animateMarkersBatch(markers, finalRadius, finalFillOpacity, duration) {
+    let startTime;
+
+    function step(timestamp) {
+      if (!startTime) startTime = timestamp;
+      const elapsed = timestamp - startTime;
+      let progress = Math.min(elapsed / duration, 1);
+
+      // Ease-out
+      progress = easeOut(progress);
+
+      // Update all markers in batch
+      markers.forEach(marker => {
+        const currentRadius = finalRadius * progress; 
+        const currentOpacity = finalFillOpacity * progress; 
+        marker.setStyle({
+          radius: currentRadius,
+          fillOpacity: currentOpacity
+        });
+      });
+
+      if (progress < 1) {
+        requestAnimationFrame(step);
+      }
+    }
+    requestAnimationFrame(step);
+  }
+
+  // Animates an array of polygons from fillOpacity=0 up to finalFillOpacity
+  // using a single requestAnimationFrame loop
+  function animatePolygonsBatch(polygons, finalFillOpacity, duration) {
+    let startTime;
+
+    function step(timestamp) {
+      if (!startTime) startTime = timestamp;
+      const elapsed = timestamp - startTime;
+      let progress = Math.min(elapsed / duration, 1);
+
+      // Ease-out
+      progress = easeOut(progress);
+
+      // Update all polygons in batch
+      polygons.forEach(polygon => {
+        polygon.setStyle({
+          fillOpacity: finalFillOpacity * progress
+        });
+      });
+
+      if (progress < 1) {
+        requestAnimationFrame(step);
+      }
+    }
+    requestAnimationFrame(step);
+  }
+
+  ///////////////////////////////////////////////////////////////////////
+  // 2) Clear existing layers and gather new cluster data
+  ///////////////////////////////////////////////////////////////////////
 
   // Clear the global polygons array
-  allPolygons = []; // Add this line
+  allPolygons = [];
 
   // Remove existing cluster layers
-  for (var clusterId in clusterLayers) {
-    map.removeLayer(clusterLayers[clusterId]);
+  for (const existingId in clusterLayers) {
+    map.removeLayer(clusterLayers[existingId]);
   }
   clusterLayers = {};
 
   if (currentClusters.length === 0) {
-    // No clusters selected, so remove legend
-    updateLegend(''); // Hide the legend
-    return; // No clusters selected
+    updateLegend('');
+    return; 
   }
 
-  var clusters = {};
-  companyData.forEach(function (company) {
-    var clusterId = company.clusterId;
+  const clusters = {};
+  companyData.forEach(company => {
+    const clusterId = company.clusterId;
     if (currentClusters.includes(clusterId)) {
       if (!clusters[clusterId]) {
         clusters[clusterId] = [];
@@ -1641,141 +1695,148 @@ function updateClusterLayers() {
     }
   });
 
-  for (var clusterId in clusters) {
-    var clusterGroup = L.layerGroup();
-    var points = [];
+  ///////////////////////////////////////////////////////////////////////
+  // 3) We'll collect newly created markers and polygons for batch animation
+  ///////////////////////////////////////////////////////////////////////
+  const newMarkers = [];   // all circle markers we create
+  const newPolygons = [];  // all polygons we create
 
-    // Initialize aggregation variables
-    var totalGrowthRate = 0;
-    var growthRateCount = 0;
-    var totalIUKFunding = 0;
-    var femaleFoundedCount = 0;
-    var totalEmployees = 0;
-    var totalTurnover = 0;
+  ///////////////////////////////////////////////////////////////////////
+  // 4) Build each cluster
+  ///////////////////////////////////////////////////////////////////////
+  for (const clusterId in clusters) {
+    const clusterGroup = L.layerGroup();
+    const points = [];
 
-    var clusterNumber = clusters[clusterId][0].cluster;
-    var sectorName = clusters[clusterId][0].sector;
-    var clusterName = clusters[clusterId][0].Cluster_name || 'Cluster ' + clusterNumber;
+    // Aggregation variables
+    let totalGrowthRate = 0;
+    let growthRateCount = 0;
+    let totalIUKFunding = 0;
+    let femaleFoundedCount = 0;
+    let totalEmployees = 0;
+    let totalTurnover = 0;
 
-    // Determine the region
-    var region = (clusterRegions[sectorName] && clusterRegions[sectorName][clusterNumber]) || 'Unknown';
+    const clusterNumber = clusters[clusterId][0].cluster;
+    const sectorName = clusters[clusterId][0].sector;
+    const clusterName = clusters[clusterId][0].Cluster_name || 'Cluster ' + clusterNumber;
+    const region = (clusterRegions[sectorName] && clusterRegions[sectorName][clusterNumber]) || 'Unknown';
 
-    clusters[clusterId].forEach(function (company) {
-      var lat = company.Latitude;
-      var lng = company.Longitude;
-      var companyNumber = company.Companynumber;
-
-      // Collect points for polygon creation
+    // Collect and aggregate data
+    clusters[clusterId].forEach(company => {
+      const lat = company.Latitude;
+      const lng = company.Longitude;
       points.push([lat, lng]);
 
-      // Collect data for aggregation
-      var growthRate = company.BestEstimateGrowthPercentagePerYear;
+      const growthRate = company.BestEstimateGrowthPercentagePerYear;
       if (typeof growthRate === 'number' && !isNaN(growthRate)) {
         totalGrowthRate += growthRate;
         growthRateCount++;
       }
-
-      var iukFunding = company.TotalInnovateUKFunding;
+      const iukFunding = company.TotalInnovateUKFunding;
       if (typeof iukFunding === 'number' && !isNaN(iukFunding)) {
         totalIUKFunding += iukFunding;
       }
-
-      // Count female-founded companies
       if (company.WomenFounded === 1) {
         femaleFoundedCount++;
       }
 
-      // Show markers if displayMode is 'points' or 'both'
+      // Show markers if needed
       if (displayMode === 'points' || displayMode === 'both') {
-        var marker = L.circleMarker([lat, lng], {
-          pane: 'markerPane', // Ensure markers are on top
-          radius: 3,
+        // Start circleMarker invisible: radius=0, fillOpacity=0
+        const marker = L.circleMarker([lat, lng], {
+          pane: 'markerPane',
+          radius: 0,
           fillColor: getClusterColor(clusterId),
           color: '#000',
           weight: 0.2,
-          fillOpacity: 0.8
+          fillOpacity: 0
         });
 
-        // Update marker popup content to include company name
+        // Marker popup
         marker.bindPopup(`
           <div class="popup-content">
             <p><strong>Company Name:</strong> ${company.Companyname}</p>
-            <p><strong>Company Number:</strong> ${companyNumber}</p>
+            <p><strong>Company Number:</strong> ${company.Companynumber}</p>
             <p><strong>Cluster:</strong> ${region} (Cluster ${clusterNumber})</p>
             <p><strong>Sector:</strong> ${company.sector}</p>
           </div>
         `);
 
+        // Hover / click styling
         marker.on({
-          mouseover: function (e) {
-            var layer = e.target;
-            layer.setStyle({
+          mouseover: e => {
+            e.target.setStyle({
               radius: 5,
               weight: 1,
               color: '#fff',
               fillOpacity: 1
             });
           },
-          mouseout: function (e) {
-            var layer = e.target;
-            layer.setStyle({
+          mouseout: e => {
+            e.target.setStyle({
               radius: 3,
               weight: 0.2,
               color: '#000',
               fillOpacity: 0.8
             });
           },
-          click: function (e) {
+          click: e => {
             e.target.openPopup();
           }
         });
 
         clusterGroup.addLayer(marker);
+        newMarkers.push(marker);  // Collect for batch animation
       }
     });
 
-    // Determine polygon color based on sector
-    var polygonColor;
-    if (clusterNumber === '0') {
-      polygonColor = '#D3D3D3'; // Light grey for Cluster 0
-    } else {
-      polygonColor = sectorColors[sectorName] || '#FFFFFF';
-    }
+    // Sector color
+    const polygonColor = (clusterNumber === '0')
+      ? '#D3D3D3'
+      : (sectorColors[sectorName] || '#FFFFFF');
 
-    // Inside updateClusterLayers, when creating polygons
-    if ((displayMode === 'polygons' || displayMode === 'both') && clusterNumber !== '0' && points.length >= 3) {
-      var polygon = L.polygon(convexHull(points), {
+    // Possibly create polygon if enough points
+    if ((displayMode === 'polygons' || displayMode === 'both') &&
+        clusterNumber !== '0' &&
+        points.length >= 3) {
+      const polygon = L.polygon(convexHull(points), {
         pane: 'polygonsPane',
         color: polygonColor,
         fillColor: polygonColor,
-        fillOpacity: 0.2,
+        fillOpacity: 0,  // start at 0 for fade-in
         weight: 1,
-        interactive: false // Set to false to prevent default event capturing
+        interactive: false
       });
 
-      // Store original style properties
       polygon.originalStyle = {
         color: polygonColor,
         weight: 1,
         fillOpacity: 0.2
       };
 
-      // Retrieve summary data for this cluster
-      var summary = clusterSummaryData[clusterId];
+      // Aggregated stats
+      const summary = clusterSummaryData[clusterId];
+      const averageGrowthRate = (growthRateCount > 0)
+        ? (totalGrowthRate / growthRateCount)
+        : null;
+      const femaleFoundedPercentage = clusters[clusterId].length > 0
+        ? (femaleFoundedCount / clusters[clusterId].length) * 100
+        : null;
 
-      // Calculate aggregated statistics
-      var averageGrowthRate = growthRateCount > 0 ? (totalGrowthRate / growthRateCount) : null;
-      var femaleFoundedPercentage = clusters[clusterId].length > 0 ? (femaleFoundedCount / clusters[clusterId].length) * 100 : null;
+      const companyCount = summary ? summary.companycount : clusters[clusterId].length;
+      const totalEmployees = summary ? Math.round(summary.total_employees) : 'N/A';
+      const totalTurnover = summary ? formatTurnover(summary.total_turnover) : 'N/A';
+      const averageGrowthRateDisplay = (averageGrowthRate !== null)
+        ? (averageGrowthRate * 100).toFixed(1) + '%'
+        : 'N/A';
+      const femaleFoundedPercentageDisplay = (femaleFoundedPercentage !== null)
+        ? femaleFoundedPercentage.toFixed(1) + '%'
+        : 'N/A';
+      const totalIUKFundingDisplay = (totalIUKFunding > 0)
+        ? formatTurnover(totalIUKFunding)
+        : 'N/A';
 
-      // Prepare summary info
-      var companyCount = summary ? summary.companycount : clusters[clusterId].length;
-      var totalEmployees = summary ? Math.round(summary.total_employees) : 'N/A';
-      var totalTurnover = summary ? formatTurnover(summary.total_turnover) : 'N/A';
-      var averageGrowthRateDisplay = averageGrowthRate !== null ? (averageGrowthRate * 100).toFixed(1) + '%' : 'N/A';
-      var femaleFoundedPercentageDisplay = femaleFoundedPercentage !== null ? femaleFoundedPercentage.toFixed(1) + '%' : 'N/A';
-      var totalIUKFundingDisplay = totalIUKFunding > 0 ? formatTurnover(totalIUKFunding) : 'N/A';
-
-      // Update polygon popup content to include new aggregated data
+      // Polygon popup
       polygon.bindPopup(`
         <div class="popup-content">
           <p><strong>${clusterName}</strong></p>
@@ -1790,10 +1851,9 @@ function updateClusterLayers() {
         </div>
       `);
 
-      // Add the polygon to the cluster group
       clusterGroup.addLayer(polygon);
 
-      // Store the polygon's layer and properties in the allPolygons array
+      // Keep track of the polygon in allPolygons
       allPolygons.push({
         layer: polygon,
         properties: {
@@ -1810,19 +1870,31 @@ function updateClusterLayers() {
           totalIUKFundingDisplay: totalIUKFundingDisplay
         }
       });
+
+      newPolygons.push(polygon); // Collect for batch animation
     }
 
     clusterLayers[clusterId] = clusterGroup;
     clusterGroup.addTo(map);
-
-    
   }
 
-  // After all clusters are added to the map, update the legend
+  ///////////////////////////////////////////////////////////////////////
+  // 5) Animate all new markers / polygons in one go
+  ///////////////////////////////////////////////////////////////////////
+  if (newMarkers.length > 0) {
+    animateMarkersBatch(newMarkers, 3, 0.8, 800); // finalRadius=3, fillOpacity=0.8, 800ms
+  }
+  if (newPolygons.length > 0) {
+    animatePolygonsBatch(newPolygons, 0.2, 800);  // fade to fillOpacity=0.2, 800ms
+  }
+
+  ///////////////////////////////////////////////////////////////////////
+  // 6) Update legend
+  ///////////////////////////////////////////////////////////////////////
   if (currentSectors.length > 0) {
     updateLegend('Sectors');
   } else {
-    updateLegend(''); // Hide the legend when no sectors are selected
+    updateLegend('');
   }
 }
 
@@ -2068,7 +2140,6 @@ function showPolygonInfo(polygonData) {
     console.error('Info box element not found');
   }
 }
-
 
 function showPolygonSelectionDialog(polygonsData) {
   var content = `
@@ -2398,9 +2469,6 @@ function onWindowResize() {
 }
 window.addEventListener('resize', onWindowResize);
 
-// Initialize a layer group to hold university markers
-var universityLayer = L.layerGroup();
-
 // Add event listener for the overlay dropdown
 var overlaySelect = document.getElementById('overlay-select');
 overlaySelect.addEventListener('change', updateOverlays);
@@ -2408,114 +2476,167 @@ overlaySelect.addEventListener('change', updateOverlays);
 function updateOverlays() {
   var value = overlaySelect.value;
 
-  // Clear layers first
-  if (map.hasLayer(universityLayer)) {
-    map.removeLayer(universityLayer);
-  }
-  if (map.hasLayer(infrastructureLayer)) {
-    map.removeLayer(infrastructureLayer);
-  }
+  // 1) Always remove all three overlays first
+  if (map.hasLayer(universityLayer))       map.removeLayer(universityLayer);
+  if (map.hasLayer(infrastructureLayer))   map.removeLayer(infrastructureLayer);
+  if (map.hasLayer(supportProgramLayer))   map.removeLayer(supportProgramLayer);
 
-  if (value === 'universities') {
-    addUniversitiesToMap();
-    // Add only universityLayer
-    if (universityLayer.getLayers().length > 0) {
+  // 2) Universities?
+  if (value === 'universities' || value === 'both') {
+    addUniversitiesToMap();                      // repopulate universityLayer
+    if (universityLayer.getLayers().length) {
       universityLayer.addTo(map);
     }
+  }
 
-  } else if (value === 'infrastructure') {
-    addInfrastructureToMap();
-    // Add only infrastructureLayer
-    if (infrastructureLayer.getLayers().length > 0) {
-      infrastructureLayer.addTo(map);
-    }
-
-  } else if (value === 'both') {
-    // Add both
-    addUniversitiesToMap();
-    if (universityLayer.getLayers().length > 0) {
-      universityLayer.addTo(map);
-    }
-
-    addInfrastructureToMap();
-    if (infrastructureLayer.getLayers().length > 0) {
+  // 3) Infrastructure?
+  if (value === 'infrastructure' || value === 'both') {
+    addInfrastructureToMap();                    // repopulate infrastructureLayer
+    if (infrastructureLayer.getLayers().length) {
       infrastructureLayer.addTo(map);
     }
   }
-  // 'none' means do not add any overlay layers
+
+  // 4) Support Programs?
+  if (value === 'support-program' || value === 'both') {
+    addSupportProgramsToMap();                   // repopulate supportProgramLayer
+    if (supportProgramLayer.getLayers().length) {
+      supportProgramLayer.addTo(map);
+    }
+  }
+
+  // 'none' is implicit: nothing gets re‑added
 }
 
+// --- UNIVERSITIES ---
 function addUniversitiesToMap() {
-  // Clear any existing markers
   universityLayer.clearLayers();
+  const selectedSectors = currentSectors;
 
-  // Get the selected sectors
-  var selectedSectors = currentSectors;
+  universityData.forEach(univ => {
+    const lat      = parseFloat(univ.Latitude);
+    const lng      = parseFloat(univ.Longitude);
+    const sector   = univ.Sector;
+    const postcode = univ.Postcode || 'N/A';
 
-  universityData.forEach(function(university) {
-    var lat = university.Latitude;
-    var lng = university.Longitude;
-    var sector = university.Sector;
-
-    // Check if the university's sector is in the selected sectors
-    if (selectedSectors.includes(sector)) {
-      if (lat && lng) {
-        // Create a marker with the custom icon
-        var marker = L.marker([lat, lng], {
-          icon: universityIcon
-        });
-
-        // Bind a popup to the marker
-        marker.bindPopup(`
-          <div class="popup-content">
-            <p><strong>University Name:</strong> ${university['University Name']}</p>
-            <p><strong>Faculty Name:</strong> ${university['Faculty name']}</p>
-            <p><strong>Sector:</strong> ${sector}</p>
-          </div>
-        `);
-
-        universityLayer.addLayer(marker);
-      } else {
-        console.warn('Invalid coordinates for university:', university);
+    if (selectedSectors.includes(sector) && !isNaN(lat) && !isNaN(lng)) {
+      // shorten website URL
+      let linkHtml = '<p><em>No website info</em></p>';
+      if (univ.Website) {
+        try { const h = new URL(univ.Website).hostname;
+              linkHtml = `<p><strong>Website:</strong> <a href="${univ.Website}" target="_blank">${h}</a></p>`; }
+        catch(e) { linkHtml = `<p><strong>Website:</strong> ${univ.Website}</p>`; }
       }
+
+      const popupHtml = `
+        <div class="popup-content">
+          <p><strong>University Name:</strong> ${univ['University Name']}</p>
+          <p><strong>Faculty Name:</strong> ${univ['Faculty name']}</p>
+          <p><strong>Sector:</strong> ${sector}</p>
+          <p><strong>Postcode:</strong> ${postcode}</p>
+          ${linkHtml}
+        </div>
+      `;
+
+      L.marker([lat, lng], { icon: universityIcon })
+        .bindPopup(popupHtml)
+        .addTo(universityLayer);
     }
   });
 
-  // Add the university layer to the map
   universityLayer.addTo(map);
 }
 
+
+// --- INFRASTRUCTURE ---
 function addInfrastructureToMap() {
   infrastructureLayer.clearLayers();
-  var selectedSectors = currentSectors;
+  const selectedSectors = currentSectors;
 
-  infrastructureData.forEach(function(record) {
-    var lat = record.Latitude;
-    var lng = record.Longitude;
-    var sector = record.Sector;
-    var name = record['Name of Business/Science Park'];
+  infrastructureData.forEach(rec => {
+    const lat      = parseFloat(rec.Latitude);
+    const lng      = parseFloat(rec.Longitude);
+    const sector   = rec.Sector;
+    const name     = rec['Name of Business/Science Park'] || 'Infrastructure';
+    const postcode = rec.Postcode || 'N/A';
 
-    // Only add if sector is selected
-    if (lat && lng && selectedSectors.includes(sector)) {
-      var marker = L.marker([lat, lng], { icon: infrastructureIcon })
-        .bindPopup(`
-          <div class="popup-content">
-            <p><strong>${name}</strong></p>
-            <p><strong>Sector:</strong> ${sector}</p>
-          </div>
-        `);
-      infrastructureLayer.addLayer(marker);
+    if (selectedSectors.includes(sector) && !isNaN(lat) && !isNaN(lng)) {
+      // shorten website URL
+      let linkHtml = '<p><em>No website info</em></p>';
+      if (rec.Website) {
+        try { const h = new URL(rec.Website).hostname;
+              linkHtml = `<p><strong>Website:</strong> <a href="${rec.Website}" target="_blank">${h}</a></p>`; }
+        catch(e) { linkHtml = `<p><strong>Website:</strong> ${rec.Website}</p>`; }
+      }
+
+      const popupHtml = `
+        <div class="popup-content">
+          <p><strong>${name}</strong></p>
+          <p><strong>Sector:</strong> ${sector}</p>
+          <p><strong>Postcode:</strong> ${postcode}</p>
+          ${linkHtml}
+        </div>
+      `;
+
+      L.marker([lat, lng], { icon: infrastructureIcon })
+        .bindPopup(popupHtml)
+        .addTo(infrastructureLayer);
     }
+  });
+
+  infrastructureLayer.addTo(map);
+}
+
+
+// --- SUPPORT PROGRAMS ---
+function addSupportProgramsToMap() {
+  supportProgramLayer.clearLayers();
+  const selectedSectors = currentSectors;
+
+  supportProgramData.forEach(prog => {
+    if (!prog['Co-ordinates']) return;
+    const [latStr, lngStr] = prog['Co-ordinates'].split(',');
+    const lat = parseFloat(latStr), lng = parseFloat(lngStr);
+    if (isNaN(lat)||isNaN(lng)) return;
+
+    const sector  = prog['Simplified Sector Mapping'];
+    if (!selectedSectors.includes(sector)) return;
+
+    const title    = prog.Title || 'Support Program';
+    const postcode = prog.Locations_map_point_post_code || 'N/A';
+
+    // shorten website URL
+    let linkHtml = '<p><em>No website info</em></p>';
+    if (prog['Website URL']) {
+      try {
+        const h = new URL(prog['Website URL']).hostname;
+        linkHtml = `<p><strong>Website:</strong> <a href="${prog['Website URL']}" target="_blank">${h}</a></p>`;
+      } catch(e) {
+        linkHtml = `<p><strong>Website:</strong> ${prog['Website URL']}</p>`;
+      }
+    }
+
+    const popupHtml = `
+      <div class="popup-content">
+        <p><strong>${title}</strong></p>
+        <p><strong>Sector:</strong> ${sector}</p>
+        <p><strong>Postcode:</strong> ${postcode}</p>
+        ${linkHtml}
+      </div>
+    `;
+
+    L.marker([lat, lng], { icon: supportIcon })
+     .bindPopup(popupHtml)
+     .addTo(supportProgramLayer);
   });
 }
 
-function populateInfrastructureLayer(data) {
-  infrastructureData = data; // Just store the data
+function getSelectedSectors () {
+  return Array.from(
+    document.querySelectorAll('.sector-chip.selected')
+  ).map(chip => chip.dataset.value);
 }
 
-function getSelectedSectors() {
-  return currentSectors; // Replace with your actual variable or logic
-}
 
 // Define the custom icon for university markers
 var universityIcon = L.icon({
@@ -2530,7 +2651,18 @@ var universityIcon = L.icon({
 
 // Define a custom icon for infrastructure markers
 var infrastructureIcon = L.icon({
-  iconUrl: 'data/infra_marker_gif.gif', // Path to your PNG file
+  iconUrl: 'data/infra_marker.png', // Path to your PNG file
+  iconSize: [35, 35],    // Adjust based on your image dimensions
+  iconAnchor: [12, 41],  // Adjust as needed
+  popupAnchor: [0, -41], // Adjust as needed
+  shadowUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-shadow.png',
+  shadowSize: [35, 35],
+  shadowAnchor: [12, 41]
+});
+
+// Define a custom icon for support program markers
+var supportIcon = L.icon({
+  iconUrl: 'data/support prog_marker.png', // Path to your PNG file
   iconSize: [35, 35],    // Adjust based on your image dimensions
   iconAnchor: [12, 41],  // Adjust as needed
   popupAnchor: [0, -41], // Adjust as needed
