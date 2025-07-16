@@ -5,168 +5,281 @@
   <title>UK Interactive Map</title>
 
   <!-- Leaflet CSS -->
-  <link
-    rel="stylesheet"
-    href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
-  />
-
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
   <!-- Leaflet Search CSS -->
-  <link
-    rel="stylesheet"
-    href="https://unpkg.com/leaflet-search@3.0.0/dist/leaflet-search.min.css"
-  />
-
+  <link rel="stylesheet" href="https://unpkg.com/leaflet-search@3.0.0/dist/leaflet-search.min.css" />
   <!-- Leaflet MarkerCluster CSS -->
-  <link
-    rel="stylesheet"
-    href="https://unpkg.com/leaflet.markercluster@1.5.3/dist/MarkerCluster.css"
-  />
-
-  <!-- Leaflet.MagnifyingGlass CSS -->
-  <link rel="stylesheet" href="leaflet.magnifyingglass.css">
-
-  <link
-    rel="stylesheet"
-    href="https://unpkg.com/leaflet.markercluster@1.5.3/dist/MarkerCluster.Default.css"
-  />
+  <link rel="stylesheet" href="https://unpkg.com/leaflet.markercluster@1.5.3/dist/MarkerCluster.css" />
+  <link rel="stylesheet" href="https://unpkg.com/leaflet.markercluster@1.5.3/dist/MarkerCluster.Default.css" />
 
   <!-- Custom CSS -->
   <link rel="stylesheet" href="css/styles.css" />
+  
+  <!-- Inline CSS additions -->
+  <style>
+    /* Hide the left frame (layer selection) */
+    .left-frame {
+      position: relative;
+      min-width: 0 !important;
+      padding: 0 !important;
+      border-right: none !important;
+      background-color: transparent !important;
+      box-sizing: border-box;
+      overflow: visible;
+      pointer-events: none;
+    }
+
+    /* Stats panel that slides from the left */
+    #sector-stats-panel {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 320px;
+      height: 100%;
+      background-color: #fafafa;
+      box-shadow: 2px 0 6px rgba(0,0,0,0.2);
+      overflow-y: auto;
+      transform: translateX(-105%);
+      transition: transform 0.3s ease;
+      z-index: 3000;
+      pointer-events: auto;
+    }
+    #sector-stats-panel.show {
+      transform: translateX(0);
+    }
+
+    /* Shift left controls right when panel is open */
+    .leaflet-top.leaflet-left {
+      position: absolute;
+      top: 10px;
+      left: 10px;
+      z-index: 5000;
+      transition: transform 0.3s ease;
+    }
+    .leaflet-control-container.controls-shift-right {
+      transform: translateX(320px);
+    }
+    
+    /* Ensure the map container is positioned relative */
+    .map-container {
+      position: relative;
+      display: flex;
+      flex-direction: row;
+      height: 100vh;
+      width: 100%;
+    }
+    
+    /* Floating Display Mode Toggle Bubble */
+    #display-mode-toggle {
+      position: absolute;
+      top: 20px; /* Moved up as requested */
+      right: calc(25% + 10px); /* Positioned just left of the right panel (assuming right-frame = 25% width) */
+      background-color: #007BFF;
+      color: #fff;
+      width: 40px;
+      height: 40px;
+      border-radius: 50%;
+      display: none; /* Hidden by default until a sector is selected */
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      z-index: 9999;
+      transition: width 0.3s ease, padding 0.3s ease;
+      overflow: hidden;
+      padding: 0 5px;
+    }
+    /* When expanded (on hover) */
+    #display-mode-toggle.expanded {
+      width: 200px;
+    }
+    /* Options inside the bubble */
+    #display-mode-options {
+      display: none;
+      margin-left: 10px;
+    }
+    #display-mode-toggle.expanded #display-mode-options {
+      display: block;
+    }
+    /* Style for the select element */
+    #display-mode-select {
+      width: 100%;
+      padding: 3px;
+      border: 1px solid #ccc;
+      border-radius: 4px;
+    }
+  </style>
+
 </head>
 <body>
   <div class="map-container">
-    <!-- Left Frame for Layer Selection -->
+    <!-- LEFT FRAME (hidden) -->
     <div class="left-frame">
-      <h3>Layers</h3>
-      <div class="left-content">
-        <div id="layer-selection">
+      <!-- Hidden Layers accordion (if needed in the future) -->
+      <h3 style="display: none;">Layers</h3>
+      <div class="accordion" style="display: none;">
+        <button class="accordion-toggle" type="button">Toggle Layers</button>
+        <div class="accordion-content" id="layer-selection">
           <input type="checkbox" id="local-authorities">
           <label for="local-authorities">Local Authorities</label><br>
-
           <input type="checkbox" id="final-areas">
           <label for="final-areas">Final Areas</label><br>
-
           <input type="checkbox" id="scaleup-density">
           <label for="scaleup-density">Scaleup Density</label><br>
-
+          <!-- New for 2023 -->
+          <input type="checkbox" id="scaleup-density-2023">
+          <label for="scaleup-density-2023">Scaleup Density (2023)</label><br>
           <input type="checkbox" id="avg-growth">
           <label for="avg-growth">Avg Growth</label><br>
         </div>
       </div>
 
-      <!-- Info Box -->
-      <div id="info-box" class="info-box hidden">
-        <!-- Content will be injected by JavaScript -->
+      <!-- Info Box for hover/click details -->
+      <div id="info-box" class="info-box hidden"></div>
+
+      <!-- Sector Stats Panel (slides in from the left) -->
+      <div id="sector-stats-panel" class="hidden">
+        <!-- JS will populate sector stats here -->
       </div>
     </div>
 
-    <!-- Map Container -->
-    <div id="map">
-      <!-- Map content -->
-      <!-- Other controls -->
+    <!-- MAP -->
+    <div id="map"></div>
+
+    <!-- Floating Display Mode Toggle Bubble (over the map) -->
+    <div id="display-mode-toggle" title="Display Mode Options">
+      &#9776;
+      <div id="display-mode-options">
+        <select id="display-mode-select">
+          <option value="points">See Cluster Points</option>
+          <option value="polygons">See Cluster Polygons</option>
+          <option value="both">See Both Clusters &amp; Polygons</option>
+        </select>
+      </div>
     </div>
 
-    <!-- Right Frame for Sector and Cluster Selection -->
+    <!-- RIGHT FRAME (Sectors, Overlays, Clusters) -->
     <div class="right-frame">
       <h3>Sectors</h3>
-      
-      <!-- Select All/Deselect All for Sectors -->
       <button id="select-all-sectors">Select All Sectors</button>
       <button id="deselect-all-sectors">Deselect All Sectors</button><br>
-
-      <!-- Sector Checkboxes Container -->
-      <div id="sector-checkboxes" class="checkboxes-container">
-        <!-- Checkboxes will be populated by JavaScript -->
-      </div>
-
-      <!-- Additional Data Dropdown -->
-      <h3>Additional Data</h3>
+      <div id="sector-chips" class="chips-container"></div>
+      <h3>Support Programmes</h3>
       <select id="overlay-select" class="overlay-dropdown">
         <option value="none">None</option>
         <option value="universities">Universities</option>
         <option value="infrastructure">Infrastructure</option>
-        <option value="both">Both</option>
+        <option value="support-program">Support Programs</option>
+        <option value="both">Show All</option>
       </select>
-
       <button id="overall-stats-button">Sector Stats</button>
-
-      <!-- Cluster Selection Section -->
+      <!-- Cluster Section -->
       <div id="cluster-section">
         <h3>Clusters</h3>
-        
-        <!-- Select All/Deselect All for Clusters -->
         <button id="select-all-clusters">Select All Clusters</button>
         <button id="deselect-all-clusters">Deselect All Clusters</button><br>
-
-        <!-- Cluster Checkboxes Container -->
-        <div id="cluster-checkboxes" class="checkboxes-container">
-          <!-- Checkboxes will be populated by JavaScript -->
-        </div>
-
-        <!-- New polygon info container -->
+        <div id="cluster-checkboxes" class="checkboxes-container"></div>
         <div id="polygon-info" class="polygon-info hidden"></div>
       </div>
     </div>
   </div>
 
-  <img src="data/company_ logo.png" id="watermark" alt="Company Logo">
+  <!-- Watermark -->
+  <img src="data/company_ logo.png" id="watermark" alt="Company Logo" />
 
   <!-- Leaflet JS -->
-  <script
-    src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"
-  ></script>
-
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
   <!-- Leaflet Search JS -->
-  <script
-    src="https://unpkg.com/leaflet-search@3.0.0/dist/leaflet-search.min.js"
-  ></script>
-
-  <!-- PapaParse JS for CSV Parsing -->
-  <script
-    src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.3.2/papaparse.min.js"
-  ></script>
-
+  <script src="https://unpkg.com/leaflet-search@3.0.0/dist/leaflet-search.min.js"></script>
+  <!-- PapaParse JS -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.3.2/papaparse.min.js"></script>
   <!-- Chroma.js -->
-  <script 
-    src="https://cdnjs.cloudflare.com/ajax/libs/chroma-js/2.1.0/chroma.min.js"
-  ></script>
-
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/chroma-js/2.1.0/chroma.min.js"></script>
   <!-- html2canvas -->
   <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
-
   <!-- Leaflet Image Plugin -->
-  <script 
-    src="https://unpkg.com/leaflet-image@0.4.0/leaflet-image.js"
-  ></script>
-
-  <!-- Leaflet.MagnifyingGlass JavaScript -->
-  <script src="leaflet.magnifyingglass.js"></script>
-
+  <script src="https://unpkg.com/leaflet-image@0.4.0/leaflet-image.js"></script>
   <!-- Leaflet MarkerCluster JS -->
-  <script
-    src="https://unpkg.com/leaflet.markercluster@1.5.3/dist/leaflet.markercluster.js"
-  ></script>
-
+  <script src="https://unpkg.com/leaflet.markercluster@1.5.3/dist/leaflet.markercluster.js"></script>
+  <!-- OverlappingMarkerSpiderfier for Leaflet -->
+  <script src="https://unpkg.com/overlapping-marker-spiderfier-leaflet/dist/oms.min.js"></script>
   <!-- Turf.js -->
-  <script src="https://unpkg.com/@turf/turf/turf.min.js"></script>
-
-  <!-- Include Turf.js from CDN -->
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/Turf.js/6.5.0/turf.min.js"></script>
-
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/chroma-js/2.1.0/chroma.min.js"></script>
-
   <script src="https://unpkg.com/@turf/turf@6.5.0/turf.min.js"></script>
-
+  <!-- Concaveman & RBush & GeometryUtil -->
   <script src="https://unpkg.com/concaveman@1.2.0/concaveman.min.js"></script>
-
-  <!-- Include RBush via CDN -->
   <script src="https://unpkg.com/rbush@3.0.1/rbush.min.js"></script>
-
   <script src="https://unpkg.com/leaflet-geometryutil"></script>
-
-  <script src="leaflet.geometryutil.js"></script>
 
   <!-- Custom JS -->
   <script src="js/script.js"></script>
+  
+  <!-- Inline JavaScript to wrap your handleSectorSelectionChange -->
+  <script>
+    document.addEventListener('DOMContentLoaded', () => {
+      const displayToggle   = document.getElementById('display-mode-toggle');
+      const displaySelect   = document.getElementById('display-mode-select');
+      const statsPanel      = document.getElementById('sector-stats-panel');
+      const sectorContainer = document.getElementById('sector-chips');
+
+      // Track the order in which the user selects sectors
+      window.selectionOrder = [];
+
+      // Show/hide bubble & auto-close panel
+      function updateDisplayModeToggleVisibility() {
+        const displayToggle = document.getElementById('display-mode-toggle');
+        if (currentSectors.length > 0) {
+          displayToggle.style.display = 'flex';
+        } else {
+          displayToggle.style.display = 'none';
+          displayToggle.classList.remove('expanded');
+          document.getElementById('sector-stats-panel').classList.remove('show');
+          document.querySelector('.leaflet-top.leaflet-left')
+                  ?.classList.remove('controls-shift-right');
+        }
+      }
+
+      window.updateDisplayModeToggleVisibility = updateDisplayModeToggleVisibility;
+
+      // If panel is open, re-show with fresh data
+      function refreshStatsPanelIfOpen() {
+        if (statsPanel.classList.contains('show')) {
+          window.showSectorStatistics?.(window.selectionOrder);
+        }
+      }
+
+      // Select All
+      document.getElementById('select-all-sectors').addEventListener('click', () => {
+      document.querySelectorAll('.sector-chip').forEach(chip => chip.classList.add('selected'));
+      // keep track of order
+      window.selectionOrder = Array.from(document.querySelectorAll('.sector-chip.selected'))
+                                  .map(c => c.dataset.value);
+      handleSectorSelectionChange();
+      updateDisplayModeToggleVisibility();
+    });
+
+    document.getElementById('deselect-all-sectors').addEventListener('click', () => {
+      document.querySelectorAll('.sector-chip').forEach(chip => chip.classList.remove('selected'));
+      window.selectionOrder = [];
+      handleSectorSelectionChange();
+      updateDisplayModeToggleVisibility();
+    });
+    
+      // Expand/collapse bubble on hover
+      displayToggle.addEventListener('mouseenter', () =>
+        displayToggle.classList.add('expanded')
+      );
+      displayToggle.addEventListener('mouseleave', () =>
+        displayToggle.classList.remove('expanded')
+      );
+
+      // Change display mode
+      displaySelect.addEventListener('change', () => {
+        window.displayMode = displaySelect.value;
+        window.updateClusterLayers?.();
+      });
+
+      // Initial state
+      updateDisplayModeToggleVisibility();
+    });
+  </script>      
 </body>
 </html>
