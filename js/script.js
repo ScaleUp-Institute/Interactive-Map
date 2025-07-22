@@ -17,12 +17,6 @@ var darkMap = L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y
   noWrap: true
 });
 
-// Satellite Map using Esri
-var satelliteMap = L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}', {
-  attribution: 'Tiles &copy; Esri &mdash; Source: Esri',
-  noWrap: true
-});
-
 var streetMap = L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
   attribution: '&copy; OpenStreetMap contributors',
   noWrap: true
@@ -32,7 +26,6 @@ var streetMap = L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png'
 var baseMaps = {
   'Light Map': lightMap,
   'Dark Map': darkMap,
-  'Satellite Map': satelliteMap,
   'Street Map': streetMap
 };
 
@@ -104,9 +97,9 @@ map.on('click', function (e) {
 var displayMode = 'both'; // 'points', 'polygons', or 'both'
 map.createPane('polygonsPane');
 map.getPane('polygonsPane').style.zIndex = 400; // Below markerPane (600)
-
+map.createPane('finalAreasBoundaryPane');
+map.getPane('finalAreasBoundaryPane').style.zIndex = 350;
 map.getPane('markerPane').style.zIndex = 600;
-
 // Ensure popupPane is above other panes
 map.getPane('popupPane').style.zIndex = 700;
 
@@ -114,6 +107,7 @@ map.getPane('popupPane').style.zIndex = 700;
 var csvData;
 var localAuthoritiesLayer;
 var finalAreasLayer;
+var finalAreasBoundaryLayer;   // thin outline version
 var finalAreasGeoJSONData;
 var scaleupData;
 var scaleupLayers = {};
@@ -337,14 +331,53 @@ function mergeData(geojsonData) {
   loadFinalAreasLayer();
 }
 
-function loadFinalAreasLayer() {
+function loadFinalAreasLayer () {
   fetch('data/final_areas.geojson')
-    .then(response => response.json())
-    .then(geojsonData => {
-      finalAreasGeoJSONData = geojsonData;
-      loadScaleupData();
+    .then(r  => r.json())
+    .then(gj => {
+      finalAreasGeoJSONData = gj;          // store it
+      buildFaLookup();                     // ← build name→feature map NOW
+      loadScaleupData();                   // continue normal flow
     })
-    .catch(error => console.error('Error loading Final Areas GeoJSON:', error));
+    .catch(err => console.error('Error loading Final Areas GeoJSON:', err));
+}
+
+/* ---------- build the lookup only after geojson is ready ---------- */
+let faNameToFeature = {};                  // global
+let finalAreaNames  = [];
+
+function buildFaLookup () {
+  faNameToFeature = {};
+  finalAreaNames  = [];
+
+  finalAreasGeoJSONData.features.forEach(f => {
+    const name = (f.properties['Final area'] || '')
+                   .trim();
+    if (name) {
+      faNameToFeature[name.toUpperCase()] = f;
+      finalAreaNames.push(name);
+    }
+  });
+  finalAreaNames.sort();
+}
+
+function zoomToFinalArea(nameRaw){
+  const name = nameRaw.trim().toUpperCase();
+  const feat = faNameToFeature[name];
+  if(!feat){ alert('Final Area not found'); return; }
+
+  const layer = L.geoJSON(feat);
+  const bounds = layer.getBounds();
+  map.fitBounds(bounds.pad(0.2));
+
+  // temporary highlight overlay
+  const flash = L.geoJSON(feat,{
+    pane:'polygonsPane',
+    style:{color:'#007BFF',weight:3,fillOpacity:0},
+    interactive:false
+  }).addTo(map);
+
+  setTimeout(()=>map.removeLayer(flash), 2000);
 }
 
 function loadScaleupData() {
@@ -409,6 +442,46 @@ function processScaleupData() {
       onEachFeature: onEachFinalAreaFeature
     });
 
+    // ---------- build once‑only thin‑outline layer ----------
+    if (!finalAreasBoundaryLayer) {
+      finalAreasBoundaryLayer = L.geoJSON(finalAreasGeoJSONData, {
+        pane: 'finalAreasBoundaryPane',   // the low‑z‑index pane you created
+        keyboard: false,          // ← no focus outline
+        style: {
+          className: 'final-area-boundary',
+          color: '#000',
+          weight: 1.2,
+          fillOpacity: 0        // hollow
+        },
+        interactive: true,
+        onEachFeature: function (feature, layer) {
+        // 1) tooltip with Final‑Area name
+        layer.bindTooltip(
+          feature.properties['Final area'] || 'Unnamed',
+          {
+            sticky: true,
+            direction: 'bottom',
+            offset: L.point(0, 25),     // ← 25 px below the cursor
+            className: 'final-area-tooltip',
+            opacity: 0.95
+          }
+        );
+
+        // 2) hover style
+        layer.on({
+          mouseover: e => {
+            e.target.setStyle({ color:'#007BFF', weight:3 });
+            // ensure above other panes while hovered
+            e.target.bringToFront();
+          },
+          mouseout: e => {
+            finalAreasBoundaryLayer.resetStyle(e.target);
+          }
+        });
+      }
+      });
+    }
+
     createScaleupLayers();
 
   } catch (error) {
@@ -417,6 +490,13 @@ function processScaleupData() {
     finalizeMapSetup();
   }
 }
+
+// hide all Final‑Area tooltips while any map popup is open
+map.on('popupopen', () => {
+  if (finalAreasBoundaryLayer) {
+    finalAreasBoundaryLayer.eachLayer(l => l.closeTooltip());
+  }
+});
 
 function loadClusterRegions(callback) {
   Papa.parse('data/cluster_regions.csv', {
@@ -556,9 +636,9 @@ document.querySelectorAll('#layer-selection input[type=checkbox]').forEach(funct
               }
               break;
             case 'final-areas':
-              if (map.hasLayer(finalAreasLayer)) {
-                map.removeLayer(finalAreasLayer);
-              }
+                 if (map.hasLayer(finalAreasBoundaryLayer)) {
+                   map.removeLayer(finalAreasBoundaryLayer);
+                 }
               break;
             case 'scaleup-density':
               if (map.hasLayer(scaleupLayers['Scaleup density per 100k (2022)'])) {
@@ -1068,6 +1148,51 @@ document.getElementById('overall-stats-button').addEventListener('click', functi
 
   leftControls.forEach(el => el.classList.add('controls-shift-right'));
 });
+
+/* ----------  Toggle Final‑Area boundaries button  ---------- */
+const BoundaryToggle = L.Control.extend({
+  onAdd: function(){
+    const btn = L.DomUtil.create('button','boundary-toggle');
+    btn.title = 'Show Final‑Area boundaries';
+    btn.innerHTML = 'Borders';
+    btn.style.cssText =
+      'background:#fff;border:1px solid #888;border-radius:4px;'+
+      'padding:2px 6px;font:14px/1 sans-serif;cursor:pointer;';
+    let active = false;
+
+    btn.onclick = e=>{
+      e.stopPropagation();
+      active = !active;
+
+      if(active){
+        if(finalAreasBoundaryLayer) finalAreasBoundaryLayer.addTo(map);
+        map.eachLayer(l=>{           // dim *tile* layers only
+          if(l instanceof L.TileLayer) l.setOpacity(0.4);
+        });
+
+        if (!faSearchControl) {
+          faSearchControl = new FinalAreaSearchControl({ position:'topleft' }).addTo(map);
+        }
+        btn.style.background='#007BFF';
+        btn.style.color='#fff';
+      }else{
+        if(finalAreasBoundaryLayer) map.removeLayer(finalAreasBoundaryLayer);
+        map.eachLayer(l=>{
+          if(l instanceof L.TileLayer) l.setOpacity(1);
+        });
+        if (faSearchControl) {
+          map.removeControl(faSearchControl);
+          faSearchControl = null;
+        }
+        btn.style.background='#fff';
+        btn.style.color='#000';
+      }
+    };
+
+    return btn;
+  }
+});
+new BoundaryToggle({position:'topleft'}).addTo(map);
 
 
 function addSearchControl() {
@@ -2505,7 +2630,20 @@ function updateOverlays() {
     }
   }
 
-  // 'none' is implicit: nothing gets re‑added
+  /* ── Legend visibility ─────────────────────────── */
+  const legend = document.getElementById('support-legend');
+  if (!legend) return;                       // safety
+
+  const showLegend =
+    value === 'universities'   ||
+    value === 'infrastructure' ||
+    value === 'support-program'||
+    value === 'both';
+
+  legend.style.display = showLegend ? 'flex' : 'none';
+
+  if (showLegend) populateSupportLegend();   // ensure it’s filled
+  
 }
 
 // --- UNIVERSITIES ---
@@ -2669,4 +2807,123 @@ var supportIcon = L.icon({
   shadowUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-shadow.png',
   shadowSize: [35, 35],
   shadowAnchor: [12, 41]
+});
+
+/* ----------  Support‑programme legend  ---------- */
+function populateSupportLegend(){
+  const container = document.getElementById('support-legend');
+  if(!container) return;          // safety
+
+  // clear if called twice
+  container.innerHTML = '';
+
+  const entries = [
+    {label:'Universities',     icon:universityIcon.options.iconUrl},
+    {label:'Infrastructure',  icon:infrastructureIcon.options.iconUrl},
+    {label:'Support Programs', icon:supportIcon.options.iconUrl}
+  ];
+
+  entries.forEach(e=>{
+    const row    = document.createElement('div');
+    row.className='legend-row';
+    row.innerHTML = `<img src="${e.icon}" alt="">${e.label}`;
+    container.appendChild(row);
+  });
+}
+document.addEventListener('DOMContentLoaded',populateSupportLegend);
+
+/* ----------  Final‑Area search Leaflet control  ---------- */
+let faSearchControl = null;
+
+/* ─────────────  Compact Final‑Area search control  ───────────── */
+const FinalAreaSearchControl = L.Control.extend({
+  onAdd: function () {
+
+    /* container lives in Leaflet’s control stack */
+    const wrap = L.DomUtil.create('div', 'fa-search-control');
+    wrap.style.display = 'flex';
+    wrap.style.gap     = '6px';
+    wrap.style.position = 'relative';       // so suggestions can be absolute
+
+    /* ── text input ──────────────────────────────────────────── */
+    const input = L.DomUtil.create('input', '', wrap);
+    input.type        = 'text';
+    input.placeholder = 'Find Final Area…';
+    input.id          = 'fa-search';
+    input.style.width = '140px';
+
+    /* suggestion box (hidden by default) */
+    const sugg = L.DomUtil.create('div', 'fa-suggest', wrap);
+
+    function updateSuggestions () {
+      const q = input.value.trim().toUpperCase();
+      sugg.innerHTML = '';
+
+      if (!q) { sugg.style.display = 'none'; return; }
+
+      /* keep max 5 matches */
+      const matches = finalAreaNames
+        .filter(n => n.toUpperCase().includes(q))
+        .slice(0, 5);
+
+      if (!matches.length) { sugg.style.display = 'none'; return; }
+
+      matches.forEach(n => {
+        const row = document.createElement('div');
+        row.textContent = n;
+        row.onclick = () => {
+          input.value = n;
+          zoomToFinalArea(n);
+          sugg.style.display = 'none';
+        };
+        sugg.appendChild(row);
+      });
+      sugg.style.display = 'block';
+    }
+
+    /* typing updates suggestions */
+    L.DomEvent.on(input, 'input', updateSuggestions);
+
+    /* Enter key zooms immediately */
+    L.DomEvent.on(input, 'keydown', e => {
+      if (e.key === 'Enter') {
+        zoomToFinalArea(input.value);
+        sugg.style.display = 'none';
+        input.blur();   // dismiss mobile keyboard
+      }
+      L.DomEvent.stopPropagation(e); // keep Leaflet hotkeys safe
+    });
+
+    /* hide suggestions when focus leaves */
+    L.DomEvent.on(input, 'blur', () => {
+      setTimeout(() => { sugg.style.display = 'none'; }, 150);
+    });
+
+    /* ── optional mic (Web‑Speech API) ───────────────────────── */
+    const mic = L.DomUtil.create('button', '', wrap);
+    mic.innerHTML = '&#x1F3A4;';
+    mic.title     = 'Voice search';
+    mic.style.cssText =
+      'width:36px;background:#fff;border:1px solid #ccc;border-radius:4px;cursor:pointer;';
+
+    if (!('webkitSpeechRecognition' in window) && !('SpeechRecognition' in window)) {
+      mic.style.display = 'none';   // browser not supported
+    } else {
+      const SR  = window.SpeechRecognition || window.webkitSpeechRecognition;
+      const rec = new SR();
+      rec.lang             = 'en-GB';
+      rec.interimResults   = false;
+      rec.onresult = e => {
+        const spoken = e.results[0][0].transcript;
+        input.value  = spoken;
+        zoomToFinalArea(spoken);
+        sugg.style.display = 'none';
+      };
+      rec.onstart = () => mic.style.background = '#ff6a00';
+      rec.onend   = () => mic.style.background = '#fff';
+      mic.onclick = e => { e.stopPropagation(); rec.start(); };
+    }
+
+    return wrap;
+  }
 });
