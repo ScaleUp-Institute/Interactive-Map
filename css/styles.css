@@ -159,7 +159,7 @@ html, body {
   border: none;
   border-radius: 4px;
   cursor: pointer;
-  margin-top: 10px;
+  margin:10px 0 12px;
   display: none;
 }
 #overall-stats-button:hover {
@@ -541,4 +541,74 @@ button:hover {
 /* optional hover hint */
 .sector-chip:not(.selected):hover {
   background: rgba(0,0,0,0.04);
+}
+
+.support-legend{
+  display:none;                 /* hidden until dropdown demands it */
+  flex-direction:column;
+  gap:6px;
+  margin:10px 0 15px;
+}
+.support-legend .legend-row{
+  display:flex;
+  align-items:center;
+  gap:8px;
+  font-size:14px;
+}
+.support-legend .legend-row img{
+  width:30px;                   /* ← bigger icons (was 22) */
+  height:30px;
+  object-fit:contain;
+}
+
+.leaflet-control .boundary-toggle:hover{
+  filter:brightness(.9);
+}
+
+.final-area-tooltip{
+  background:rgba(255,255,255,0.9);
+  border:1px solid #555;
+  border-radius:4px;
+  padding:2px 6px;
+  font:12px/1.2 "Open Sans",sans-serif;
+  color:#000;
+  box-shadow:0 1px 4px rgba(0,0,0,0.3);
+}
+
+.final-area-boundary:focus{
+  outline: none;
+}
+
+.fa-search-control{
+  position:relative;          /* so we can absolutely‑place suggestions */
+}
+
+.fa-search-control input{
+  flex: 0 0 100px;   /* 0 grow | 0 shrink | 140 px basis  */
+  width: 100px;      /* fallback for older browsers       */
+  padding: 5px 7px;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+  font-size: 13px;
+}
+
+.fa-suggest{
+  position:absolute;
+  top:32px;                   /* just under the input */
+  left:0;
+  width:140px;
+  background:#fff;
+  border:1px solid #ccc;
+  border-radius:4px;
+  box-shadow:0 2px 6px rgba(0,0,0,.2);
+  z-index:10000;
+  display:none;
+}
+.fa-suggest div{
+  padding:4px 6px;
+  cursor:pointer;
+}
+.fa-suggest div:hover{
+  background:#007BFF;
+  color:#fff;
 }
